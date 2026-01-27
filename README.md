@@ -5,13 +5,13 @@ Wechaty channel plugin for [Clawdbot](https://github.com/moltbot/moltbot).
 ## Installation
 
 ```bash
-clawdbot plugins install moltbot-wechaty
+clawdbot plugins install @moltbot-channel/wechaty
 ```
 
 Or install via npm:
 
 ```bash
-npm install moltbot-wechaty
+npm install @moltbot-channel/wechaty
 ```
 
 ## Configuration

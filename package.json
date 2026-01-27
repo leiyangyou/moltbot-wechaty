@@ -1,5 +1,5 @@
 {
-  "name": "moltbot-wechaty",
+  "name": "@moltbot-channel/wechaty",
   "version": "0.1.0",
   "type": "module",
   "description": "Moltbot Wechaty channel plugin for messaging platforms",
