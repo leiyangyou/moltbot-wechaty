@@ -1,0 +1,98 @@
+# Wechaty Channel Configuration Example
+# Copy relevant sections to your ~/.clawdbot/config.yaml
+
+# ====================================
+# Option 1: Feishu (Lark)
+# ====================================
+channels:
+  wechaty:
+    # Enable/disable the channel
+    enabled: true
+
+    # Feishu puppet
+    puppet: "wechaty-puppet-feishu"
+
+    # Feishu app credentials
+    puppetOptions:
+      appId: "cli_a1234567890abcde"  # Required: Your Feishu app ID
+      appSecret: "your_app_secret_here"  # Required: Your Feishu app secret
+      domain: "feishu"  # Optional: "feishu" (China) or "lark" (International), default is "feishu"
+
+# ====================================
+# Option 2: Custom Puppet
+# ====================================
+# channels:
+#   wechaty:
+#     enabled: true
+#
+#     # Custom puppet provider
+#     puppet: "wechaty-puppet-custom"
+#
+#     # Puppet-specific options
+#     puppetOptions:
+#       token: "your_token_here"
+#       # ... other puppet options
+
+# ====================================
+# Common Configuration (applies to all puppets)
+# ====================================
+
+    # Direct message (DM) security policy
+    dm:
+      # Policy options:
+      # - "pairing": Require approval via 'clawdbot pairing approve wechaty <id>'
+      # - "allowlist": Only users in allowFrom can message the bot
+      # - "open": Anyone can message the bot (not recommended)
+      policy: "pairing"
+
+      # Allowlist of user IDs (for pairing/allowlist policies)
+      allowFrom:
+        - "user_id_123"
+        # - "user_id_456"
+
+    # Group message policy
+    # Options: "allowlist", "open", "disabled"
+    groupPolicy: "allowlist"
+
+    # List of allowed group/room IDs (for allowlist policy)
+    groups:
+      - "group_id_123"
+      # - "group_id_456"
+
+    # Optional: restrict group messages to specific users
+    groupAllowFrom: []
+
+    # Require @mention in groups (default: true)
+    groupRequireMention: true
+
+    # Auto-accept friend requests (default: false)
+    autoAcceptFriend: false
+
+    # Reply mode for threading (default: "off")
+    # Options: "off", "all", "direct"
+    replyToMode: "off"
+
+# ====================================
+# Multi-account example (optional)
+# ====================================
+# channels:
+#   wechaty:
+#     accounts:
+#       feishu-bot:
+#         enabled: true
+#         puppet: "wechaty-puppet-feishu"
+#         puppetOptions:
+#           appId: "cli_bot1_app_id"
+#           appSecret: "bot1_app_secret"
+#         dm:
+#           policy: "pairing"
+#
+#       custom-bot:
+#         enabled: true
+#         puppet: "wechaty-puppet-custom"
+#         puppetOptions:
+#           token: "custom_bot_token"
+#         dm:
+#           policy: "allowlist"
+#           allowFrom:
+#             - "user_abc123"

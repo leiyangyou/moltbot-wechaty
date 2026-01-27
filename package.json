@@ -1,0 +1,68 @@
+{
+  "name": "moltbot-wechaty",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Moltbot Wechaty channel plugin for messaging platforms",
+   "files": [
+    "index.ts",
+    "src",
+    "clawdbot.plugin.json"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leochen-g/moltbot-wechaty.git"
+  },
+  "keywords": [
+    "clawdbot",
+    "moltbot",
+    "feishu",
+    "lark",
+    "飞书",
+    "chatbot",
+    "ai",
+    "claude",
+    "wechaty"
+  ],
+  "clawdbot": {
+    "extensions": [
+      "./index.ts"
+    ],
+    "channel": {
+      "id": "wechaty",
+      "label": "Wechaty",
+      "selectionLabel": "Wechaty",
+      "detailLabel": "Wechaty",
+      "docsPath": "/channels/wechaty",
+      "docsLabel": "wechaty",
+      "blurb": "Multi-platform IM support via Wechaty puppets",
+      "systemImage": "message.and.waveform",
+      "order": 65,
+      "quickstartAllowFrom": true
+    },
+    "install": {
+      "npmSpec": "moltbot-wechaty",
+      "localPath": ".",
+      "defaultChoice": "npm"
+    }
+  },
+  "dependencies": {
+    "@juzi/wechaty": "^1.0.137",
+    "@juzi/wechaty-puppet": "^1.0.130",
+    "@juzi/wechaty-puppet-service": "^1.0.113",
+    "wechaty-puppet-official-account": "^1.10.14",
+    "wechaty-puppet-feishu": "^0.0.2",
+    "wechaty-puppet-matrix": "^0.0.40",
+    "qrcode-terminal": "^0.12.0",
+    "@juzi/file-box": "^1.8.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.10",
+    "clawdbot": "2026.1.24-2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.0"
+  },
+  "peerDependencies": {
+    "clawdbot": ">=2026.1.24"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "id": "wechaty",
+  "channels": [
+    "wechaty"
+  ],
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}
