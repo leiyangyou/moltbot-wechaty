@@ -1,11 +1,13 @@
 import type { Wechaty, Contact, Room } from "@juzi/wechaty";
-import { FileBox } from "@juzi/file-box";
+import { prepareWechatyMedia } from "./media.js";
 
 export type WechatySendOpts = {
   targetId: string;
   text?: string;
   mediaUrl?: string;
+  mediaBuffer?: Buffer;
   mediaType?: "image" | "video" | "audio" | "file";
+  fileName?: string;
   accountId?: string;
   bot?: Wechaty;
 };
@@ -86,18 +88,24 @@ export async function sendMessageWechaty(
   }
 
   // Send media if provided
-  if (opts?.mediaUrl) {
-    let fileBox: any;
+  if (opts?.mediaUrl || opts?.mediaBuffer) {
+    try {
+      const mediaResult = await prepareWechatyMedia({
+        mediaUrl: opts.mediaUrl,
+        mediaBuffer: opts.mediaBuffer,
+        fileName: opts.fileName,
+      });
 
-    if (opts.mediaUrl.startsWith("http://") || opts.mediaUrl.startsWith("https://")) {
-      // Remote URL
-      fileBox = FileBox.fromUrl(opts.mediaUrl);
-    } else {
-      // Local file
-      fileBox = FileBox.fromFile(opts.mediaUrl);
+      if (mediaResult) {
+        await recipient.say(mediaResult.fileBox);
+      }
+    } catch (error) {
+      console.error(`Failed to send media: ${String(error)}`);
+      // Fallback to URL link if upload fails and it's a URL
+      if (opts.mediaUrl && !opts.mediaBuffer) {
+        await recipient.say(`📎 ${opts.mediaUrl}`);
+      }
     }
-
-    await recipient.say(fileBox);
   }
 
   return { messageId: undefined };

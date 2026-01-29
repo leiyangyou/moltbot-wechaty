@@ -18,9 +18,37 @@ export const wechatyOutbound: ChannelOutboundAdapter = {
   },
   sendMedia: async ({ to, text, mediaUrl, deps, replyToId, threadId }) => {
     const send = deps?.sendWechaty ?? sendMessageWechaty;
-    const result = await send(to, text ?? "", {
-      mediaUrl,
-    });
+
+    // Send text first if provided
+    if (text?.trim()) {
+      await send(to, text, {});
+    }
+
+    // Upload and send media if URL provided
+    if (mediaUrl) {
+      try {
+        const result = await send(to, "", {
+          mediaUrl,
+        });
+        return {
+          channel: "wechaty",
+          messageId: result.messageId,
+        };
+      } catch (err) {
+        // Log the error for debugging
+        console.error(`[wechaty] sendMedia failed:`, err);
+        // Fallback to URL link if upload fails
+        const fallbackText = `📎 ${mediaUrl}`;
+        const result = await send(to, fallbackText, {});
+        return {
+          channel: "wechaty",
+          messageId: result.messageId,
+        };
+      }
+    }
+
+    // No media URL, just return text result
+    const result = await send(to, text ?? "", {});
     return {
       channel: "wechaty",
       messageId: result.messageId,

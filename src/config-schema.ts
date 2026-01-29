@@ -51,5 +51,6 @@ export const WechatyConfigSchema = z.object({
   groupRequireMention: z.boolean().optional(),
   autoAcceptFriend: z.boolean().optional(),
   replyToMode: z.enum(["off", "all", "direct"]).optional(),
+  mediaMaxMb: z.number().positive().optional(),
   accounts: z.record(z.string(), accountSchema).optional(),
 });

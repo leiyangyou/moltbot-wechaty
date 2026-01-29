@@ -1,5 +1,4 @@
-import type { Message, Contact, Room, Wechaty } from "@juzi/wechaty";
-import type { Friendship } from "@juzi/wechaty/impls";
+import type { Message, Contact, Room, Wechaty, Friendship } from "@juzi/wechaty";
 import {
   formatAllowlistMatchMeta,
   logInboundDrop,
@@ -12,6 +11,7 @@ import { resolveWechatyAccount, type ResolvedWechatyAccount } from "./accounts.j
 import type { CoreConfig, WechatyMessageContext, WechatyMessageType } from "../types.js";
 import { getWechatyRuntime } from "../runtime.js";
 import { sendMessageWechaty } from "./send.js";
+import { resolveWechatyMediaList, buildWechatyMediaPayload } from "./media.js";
 
 export type MonitorWechatyOpts = {
   config?: CoreConfig;
@@ -313,6 +313,17 @@ async function handleWechatyMessage(params: {
       },
     });
 
+    // Resolve media from message
+    const wechatyCfg = config.channels?.wechaty;
+    const mediaMaxBytes = ((wechatyCfg as any)?.mediaMaxMb ?? 30) * 1024 * 1024;
+    const mediaList = await resolveWechatyMediaList({
+      cfg: config,
+      message,
+      maxBytes: mediaMaxBytes,
+      log,
+    });
+    const mediaPayload = buildWechatyMediaPayload(mediaList);
+
     // Prepare message body
     const rawBody = text ?? "";
     const fromLabel = isGroup ? roomTopic || `room:${roomId}` : senderName || `user:${senderId}`;
@@ -371,6 +382,7 @@ async function handleWechatyMessage(params: {
       OriginatingChannel: "wechaty",
       OriginatingTo: isGroup ? `wechaty:room:${roomId}` : `wechaty:${senderId}`,
       Timestamp: timestamp ?? undefined,
+      ...mediaPayload,
     });
 
     // Record session

@@ -173,15 +173,15 @@ export const wechatyPlugin: ChannelPlugin<ResolvedWechatyAccount> = {
 
   directory: {
     self: async () => null,
-    listPeers: async ({ accountId }) => {
-      const peers = await listWechatyDirectoryPeersLive({ accountId });
+    listPeers: async ({ cfg, query, limit }) => {
+      const peers = await listWechatyDirectoryPeersLive({ cfg, query, limit });
       return peers.map((peer) => ({
         id: peer.id,
         name: peer.name,
       }));
     },
-    listGroups: async ({ accountId }) => {
-      const groups = await listWechatyDirectoryGroupsLive({ accountId });
+    listGroups: async ({ cfg, query, limit }) => {
+      const groups = await listWechatyDirectoryGroupsLive({ cfg, query, limit });
       return groups.map((group) => ({
         id: group.id,
         name: group.name,
@@ -190,13 +190,8 @@ export const wechatyPlugin: ChannelPlugin<ResolvedWechatyAccount> = {
   },
 
   resolver: {
-    resolveTargets: async ({ accountId, query }) => {
-      const targets = await resolveWechatyTargets({ accountId, query });
-      return targets.map((target) => ({
-        id: target.id,
-        name: target.name,
-        type: target.type === "room" ? "group" : "direct",
-      }));
+    resolveTargets: async ({ cfg, inputs, kind, runtime }) => {
+      return resolveWechatyTargets({ cfg, inputs, kind, runtime });
     },
   },
 
