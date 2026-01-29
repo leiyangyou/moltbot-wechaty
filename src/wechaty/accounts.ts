@@ -44,12 +44,31 @@ export function resolveWechatyAccount(params: {
   const { cfg, accountId } = params;
   const wechatyConfig = cfg.channels?.wechaty;
 
-  if (!wechatyConfig) {
-    throw new Error("Wechaty channel not configured");
-  }
-
   const resolvedId = accountId ? normalizeAccountId(accountId) : DEFAULT_ACCOUNT_ID;
-  const isDefault = resolvedId === DEFAULT_ACCOUNT_ID;
+
+  // If no config exists at all, return a minimal unconfigured account
+  if (!wechatyConfig) {
+    return {
+      accountId: resolvedId,
+      name: undefined,
+      enabled: false,
+      configured: false,
+      puppet: "",
+      puppetOptions: undefined,
+      config: {
+        enabled: false,
+        dm: {
+          policy: "pairing",
+          allowFrom: [],
+        },
+        groupPolicy: "allowlist",
+        groups: [],
+        groupAllowFrom: [],
+        groupRequireMention: true,
+        autoAcceptFriend: false,
+      },
+    };
+  }
 
   // Get account-specific config
   const accountConfig = wechatyConfig.accounts?.[resolvedId];
@@ -77,7 +96,7 @@ export function resolveWechatyAccount(params: {
       accountConfig?.autoAcceptFriend ?? wechatyConfig.autoAcceptFriend ?? false,
   };
 
-  const puppet = mergedConfig.puppet || "wechaty-puppet-feishu";
+  const puppet = mergedConfig.puppet || "";
   const configured = Boolean(puppet);
 
   return {

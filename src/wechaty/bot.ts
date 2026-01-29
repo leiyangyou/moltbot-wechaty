@@ -1,4 +1,4 @@
-import { WechatyBuilder, type Wechaty, type Message, type Contact, type Room, type Friendship} from "@juzi/wechaty";
+import { WechatyBuilder, type Wechaty, type Message, type Contact, type Room, type Friendship } from "@juzi/wechaty";
 import qrcodeTerminal from "qrcode-terminal";
 
 /**
@@ -26,8 +26,6 @@ import qrcodeTerminal from "qrcode-terminal";
  *   puppet: 'wechaty-puppet-custom',
  *   puppetOptions: {
  *     token: 'your_token_here',
- *     authority: 'service.example.com',
- *     tls: { disable: true },
  *   },
  * });
  */
@@ -68,11 +66,15 @@ export function createWechatyBot(opts: WechatyBotOptions): Wechaty {
   } else if (opts.puppet === "@juzi/wechaty-puppet-service") {
     // For custom string-based puppets
     botConfig.puppet = "@juzi/wechaty-puppet-service";
-    botConfig.puppetOptions = opts.puppetOptions || {};
-  } else if (opts.puppet === "wechaty-puppet-matrix") { 
-    botConfig.puppet = new(require("wechaty-puppet-matrix").PuppetMatrix)(opts.puppetOptions || {});
+    botConfig.puppetOptions = {
+      authority: 'token-service-discovery-test.juzibot.com',
+      tls: { disable: true },
+      ...opts.puppetOptions
+    };
+  } else if (opts.puppet === "wechaty-puppet-matrix") {
+    botConfig.puppet = new (require("wechaty-puppet-matrix").PuppetMatrix)(opts.puppetOptions || {});
   } else if (opts.puppet === "wechaty-puppet-official-account") {
-    botConfig.puppet = new(require("wechaty-puppet-official-account").PuppetOfficialAccount)(opts.puppetOptions || {});
+    botConfig.puppet = new (require("wechaty-puppet-official-account").PuppetOfficialAccount)(opts.puppetOptions || {});
   }
 
   const bot = WechatyBuilder.build(botConfig);

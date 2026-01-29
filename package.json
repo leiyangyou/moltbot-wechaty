@@ -1,9 +1,12 @@
 {
   "name": "@moltbot-channel/wechaty",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "type": "module",
+  "scripts": {
+    "start:test": "node --loader ts-node/esm example/bot-test.ts"
+  },
   "description": "Moltbot Wechaty channel plugin for messaging platforms",
-   "files": [
+  "files": [
     "index.ts",
     "src",
     "clawdbot.plugin.json"
@@ -46,19 +49,21 @@
     }
   },
   "dependencies": {
+    "@grpc/grpc-js": "1.9.14",
+    "@juzi/file-box": "^1.8.2",
     "@juzi/wechaty": "^1.0.137",
     "@juzi/wechaty-puppet": "^1.0.130",
     "@juzi/wechaty-puppet-service": "^1.0.113",
-    "wechaty-puppet-official-account": "^1.10.14",
-    "wechaty-puppet-feishu": "^0.0.2",
-    "wechaty-puppet-matrix": "^0.0.40",
     "qrcode-terminal": "^0.12.0",
-    "@juzi/file-box": "^1.8.2",
+    "wechaty-puppet-feishu": "^0.0.3",
+    "wechaty-puppet-matrix": "^0.0.41",
+    "wechaty-puppet-official-account": "^1.10.14",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^25.0.10",
     "clawdbot": "2026.1.24-2",
+    "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.7.0"
   },
