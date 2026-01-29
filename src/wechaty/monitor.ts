@@ -524,8 +524,11 @@ export async function monitorWechatyProvider(opts: MonitorWechatyOpts): Promise<
           // Check if bot is mentioned in group
           let mentionSelf = false;
           if (room && currentUser) {
-            const mentionList = await message.mentionList();
-            mentionSelf = mentionList.some((contact) => contact.id === currentUser!.id);
+           mentionSelf = (await message.mentionSelf());
+           const isMentionAll = await message.isMentionAll()
+            if(isMentionAll) {
+              mentionSelf = false
+            }
           }
 
           // Build context
