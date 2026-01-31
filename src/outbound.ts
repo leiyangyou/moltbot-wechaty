@@ -1,4 +1,4 @@
-import type { ChannelOutboundAdapter } from "clawdbot/plugin-sdk";
+import type { ChannelOutboundAdapter } from "openclaw/plugin-sdk";
 
 import { getWechatyRuntime } from "./runtime.js";
 import { sendMessageWechaty } from "./wechaty/send.js";

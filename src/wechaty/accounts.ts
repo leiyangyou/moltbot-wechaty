@@ -1,4 +1,4 @@
-import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "clawdbot/plugin-sdk";
+import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "openclaw/plugin-sdk";
 import type { CoreConfig, WechatyAccountConfig, WechatyChannelConfig } from "../types.js";
 
 export type ResolvedWechatyAccount = {

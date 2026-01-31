@@ -1,22 +1,18 @@
-# moltbot-wechaty
+# openclaw-wechaty
 
-Wechaty channel plugin for [Clawdbot](https://github.com/moltbot/moltbot).
+Wechaty channel plugin for [Clawdbot](https://github.com/openclaw/openclaw).
 
 ## Installation
 
 ```bash
-clawdbot plugins install @moltbot-channel/wechaty
-
-or
-
-moltbot plugins install @moltbot-channel/wechaty
+openclaw plugins install @openclaw-channel/wechaty
 ```
 
 
 Or install via npm:
 
 ```bash
-npm install @moltbot-channel/wechaty
+npm install @openclaw-channel/wechaty
 ```
 
 #### Required Permissions

@@ -1,4 +1,4 @@
-import type { ChannelDirectoryEntry } from "clawdbot/plugin-sdk";
+import type { ChannelDirectoryEntry } from "openclaw/plugin-sdk";
 
 import { getActiveWechatyBot } from "./wechaty/send.js";
 import { resolveDefaultWechatyAccountId } from "./wechaty/accounts.js";

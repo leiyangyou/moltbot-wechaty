@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **Wechaty channel plugin for Clawdbot** (also known as Moltbot), enabling multi-platform instant messaging support through Wechaty's puppet system. The plugin acts as a bridge between Clawdbot's agent system and various IM platforms (Feishu/Lark, Matrix, WeChat Official Account, etc.).
+This is a **Wechaty channel plugin for Clawdbot** (also known as Openclaw), enabling multi-platform instant messaging support through Wechaty's puppet system. The plugin acts as a bridge between Clawdbot's agent system and various IM platforms (Feishu/Lark, Matrix, WeChat Official Account, etc.).
 
 **Key Architecture Concepts:**
 - **Plugin Pattern**: Implements Clawdbot's `ChannelPlugin` interface to extend the bot framework

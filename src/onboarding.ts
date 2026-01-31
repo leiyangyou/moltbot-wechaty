@@ -4,8 +4,8 @@ import type {
   ClawdbotConfig,
   DmPolicy,
   WizardPrompter,
-} from "clawdbot/plugin-sdk";
-import { DEFAULT_ACCOUNT_ID, formatDocsLink, promptAccountId } from "clawdbot/plugin-sdk";
+} from "openclaw/plugin-sdk";
+import { DEFAULT_ACCOUNT_ID, formatDocsLink, promptAccountId } from "openclaw/plugin-sdk";
 
 import type { CoreConfig } from "./types.js";
 import {

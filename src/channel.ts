@@ -12,7 +12,7 @@ import {
   type ChannelGatewayContext,
   type ChannelPlugin,
   type ChannelStatusIssue,
-} from "clawdbot/plugin-sdk";
+} from "openclaw/plugin-sdk";
 
 import { wechatyMessageActions } from "./actions.js";
 import { WechatyConfigSchema } from "./config-schema.js";

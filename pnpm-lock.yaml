@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@chatie/semver':
+        specifier: ^0.4.7
+        version: 0.4.7
       '@grpc/grpc-js':
         specifier: 1.9.14
         version: 1.9.14
@@ -27,8 +30,8 @@ importers:
         specifier: ^0.12.0
         version: 0.12.0
       wechaty-puppet-feishu:
-        specifier: ^0.0.3
-        version: 0.0.3(@juzi/wechaty@1.0.139(@juzi/wechaty-puppet@1.0.130(rxjs@7.8.2))(brolog@1.14.2)(redux@4.2.1)(rxjs@7.8.2))(brolog@1.14.2)(redux@4.2.1)(rxjs@7.8.2)
+        specifier: ^0.0.5
+        version: 0.0.5(@juzi/wechaty@1.0.139(@juzi/wechaty-puppet@1.0.130(rxjs@7.8.2))(brolog@1.14.2)(redux@4.2.1)(rxjs@7.8.2))(brolog@1.14.2)(redux@4.2.1)(rxjs@7.8.2)
       wechaty-puppet-matrix:
         specifier: ^0.0.41
         version: 0.0.41(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.975.0)(@aws-sdk/credential-provider-node@3.972.2)(@browserbasehq/sdk@2.6.0)(@browserbasehq/stagehand@1.14.0(@playwright/test@1.58.0)(deepmerge@4.3.1)(dotenv@17.2.3)(openai@6.10.0(ws@8.19.0)(zod@4.3.6))(zod@4.3.6))(@cfworker/json-schema@4.1.1)(@ibm-cloud/watsonx-ai@1.7.7)(@juzi/wechaty-puppet@1.0.130(rxjs@7.8.2))(@juzi/wechaty@1.0.139(@juzi/wechaty-puppet@1.0.130(rxjs@7.8.2))(brolog@1.14.2)(redux@4.2.1)(rxjs@7.8.2))(@mozilla/readability@0.6.0)(@smithy/util-utf8@2.3.0)(fast-xml-parser@5.2.5)(google-auth-library@10.5.0)(hono@4.11.4)(ibm-cloud-sdk-core@5.4.5)(lodash@4.17.23)(openai@6.10.0(ws@8.19.0)(zod@4.3.6))(playwright@1.58.0)(redis@4.7.1)(weaviate-client@3.11.0)
@@ -42,9 +45,9 @@ importers:
       '@types/node':
         specifier: ^25.0.10
         version: 25.0.10
-      clawdbot:
-        specifier: 2026.1.24-2
-        version: 2026.1.24-2(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.11.4)(zod@4.3.6))(@types/express@5.0.6)(devtools-protocol@0.0.1575685)(typescript@5.9.3)
+      openclaw:
+        specifier: ^2026.1.29
+        version: 2026.1.29(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.11.4)(zod@4.3.6))(@types/express@5.0.6)(devtools-protocol@0.0.1575685)(typescript@5.9.3)
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@25.0.10)(typescript@5.9.3)
@@ -328,6 +331,10 @@ packages:
 
   '@cfworker/json-schema@4.1.1':
     resolution: {integrity: sha512-gAmrUZSGtKc3AiBL71iNWxDsyUC5uMaKKGdvzYsBoTW/xi42JQHl7eKV2OYzCUqvc+D2RCcf7EXY2iCyFIk6og==}
+
+  '@chatie/semver@0.4.7':
+    resolution: {integrity: sha512-44ZQv2LkjDDsamQBe/9tSmpLouKyOEvc8sP4Ably1Cf/44tuifVFoIpGLQV67YIDHEMCN4/yloNkmIYfVVKH7w==}
+    hasBin: true
 
   '@clack/core@0.5.0':
     resolution: {integrity: sha512-p3y0FIOwaYRUPRcMO7+dlmLh8PSRcrjuTndsiA0WAFbWES0mLZlrjVoBRZ9DzkPFJZG6KGkJmoEAY0ZcVWTkow==}
@@ -2257,6 +2264,9 @@ packages:
   '@types/retry@0.12.0':
     resolution: {integrity: sha512-wWKOClTTiizcZhXnPY4wikVAwmdYHp8q6DmC+EJUzAMsycb7HB32Kh9RN4+0gExjmPmZSAQjgURXIGATPegAvA==}
 
+  '@types/semver@6.2.7':
+    resolution: {integrity: sha512-blctEWbzUFzQx799RZjzzIdBJOXmE37YYEyDtKkx5Dg+V7o/zyyAxLPiI98A2jdTtDgxZleMdfV+7p8WbRJ1OQ==}
+
   '@types/send@1.2.1':
     resolution: {integrity: sha512-arsCikDvlU99zl1g69TcAB3mzZPpxgw0UQnaHeC1Nwb015xp8bknZv5rIfri9xTOcMuaVgvabfIRA7PSZVuZIQ==}
 
@@ -2643,11 +2653,6 @@ packages:
   ci-info@4.3.1:
     resolution: {integrity: sha512-Wdy2Igu8OcBpI2pZePZ5oWjPC38tmDVx5WKUXKwlLYkA0ozo85sLsLvkBbBn/sZaSCMFOGZJ14fvW9t5/d7kdA==}
     engines: {node: '>=8'}
-
-  clawdbot@2026.1.24-2:
-    resolution: {integrity: sha512-vp1VZa9uQjdrqJpCe711NTSCyDsXavsL4YJdb2orzuW3qB8vQ+75r6o5QFlJMNoSqs1OdPmgbchjYxDq49/Mkw==}
-    engines: {node: '>=22.12.0'}
-    hasBin: true
 
   cli-cursor@5.0.0:
     resolution: {integrity: sha512-aCj4O5wKyszjMmDT4tZj93kxyydN/K5zPWSCe6/0AV/AA1pqe5ZBIw0a2ZfPQV7lL5/yb5HsUreJ6UFAF1tEQw==}
@@ -4419,6 +4424,11 @@ packages:
   openapi-types@12.1.3:
     resolution: {integrity: sha512-N4YtSYJqghVu4iek2ZUvcN/0aqH1kRDuNqzcycDxhOUpg7GdvLa2F3DgS6yBNhInhv2r/6I0Flkn7CqL8+nIcw==}
 
+  openclaw@2026.1.29:
+    resolution: {integrity: sha512-CVUOAH83BCrlnD56I1JahGVpg0mjp4fjJPdJg9q6Pijn/YdOopsfdInDqSeIEZwGtu/+0w69/uJccY23C9I+vg==}
+    engines: {node: '>=22.12.0'}
+    hasBin: true
+
   openurl@1.1.1:
     resolution: {integrity: sha512-d/gTkTb1i1GKz5k3XE3XFV/PxQ1k45zDqGP2OA7YhgsaLoqm6qRvARAZOFer1fcXritWlGBRCu/UgeS4HAnXAA==}
 
@@ -4929,6 +4939,10 @@ packages:
 
   semver@5.7.2:
     resolution: {integrity: sha512-cBznnQ9KjJqU67B52RMC65CMarK2600WFnbkcaiwWq3xy/5haFJlshgnpjovMVJ+Hff49d8GEn0b87C5pDQ10g==}
+    hasBin: true
+
+  semver@6.3.1:
+    resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
     hasBin: true
 
   semver@7.7.3:
@@ -5546,8 +5560,8 @@ packages:
     resolution: {integrity: sha512-umxCMgedPAVq4Pe/jl3xmelLXLn4XZWFEMR5Iipb5wJ+k1xMX0yC4ZY9CueZUU1MjapFxai1tFGE7R/kotH6Ww==}
     engines: {node: '>=6.0.0', npm: '>=3.10.0'}
 
-  wechaty-puppet-feishu@0.0.3:
-    resolution: {integrity: sha512-2zk6OubhrNJW59tZ4pr2oUyuuq0hPOci0Z4xgsNDUvKVud1RWIMX+dln/uGVOSuX1tLma18WWtFKg6zoVW75Zw==}
+  wechaty-puppet-feishu@0.0.5:
+    resolution: {integrity: sha512-Vmp/s28x7GT2tGIGRK6dHuHoRfzEk12Le0+6aoLNxeJbqIPQrL+bY189ZR/BK7mpUi0KXoswEOIy4dpl7EIJ1w==}
     peerDependencies:
       '@juzi/wechaty': ^1.0.0
 
@@ -6542,6 +6556,11 @@ snapshots:
       keyv: 5.6.0
 
   '@cfworker/json-schema@4.1.1': {}
+
+  '@chatie/semver@0.4.7':
+    dependencies:
+      '@types/semver': 6.2.7
+      semver: 6.3.1
 
   '@clack/core@0.5.0':
     dependencies:
@@ -8431,6 +8450,8 @@ snapshots:
 
   '@types/retry@0.12.0': {}
 
+  '@types/semver@6.2.7': {}
+
   '@types/send@1.2.1':
     dependencies:
       '@types/node': 25.0.10
@@ -8915,84 +8936,6 @@ snapshots:
 
   ci-info@4.3.1:
     optional: true
-
-  clawdbot@2026.1.24-2(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.11.4)(zod@4.3.6))(@types/express@5.0.6)(devtools-protocol@0.0.1575685)(typescript@5.9.3):
-    dependencies:
-      '@agentclientprotocol/sdk': 0.13.1(zod@4.3.6)
-      '@aws-sdk/client-bedrock': 3.975.0
-      '@buape/carbon': 0.14.0(hono@4.11.4)
-      '@clack/prompts': 0.11.0
-      '@grammyjs/runner': 2.0.3(grammy@1.39.3)
-      '@grammyjs/transformer-throttler': 1.2.1(grammy@1.39.3)
-      '@homebridge/ciao': 1.3.4
-      '@line/bot-sdk': 10.6.0
-      '@lydell/node-pty': 1.2.0-beta.3
-      '@mariozechner/pi-agent-core': 0.49.3(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.11.4)(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
-      '@mariozechner/pi-ai': 0.49.3(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.11.4)(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
-      '@mariozechner/pi-coding-agent': 0.49.3(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.11.4)(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
-      '@mariozechner/pi-tui': 0.49.3
-      '@mozilla/readability': 0.6.0
-      '@sinclair/typebox': 0.34.47
-      '@slack/bolt': 4.6.0(@types/express@5.0.6)
-      '@slack/web-api': 7.13.0
-      '@whiskeysockets/baileys': 7.0.0-rc.9(sharp@0.34.5)
-      ajv: 8.17.1
-      body-parser: 2.2.2
-      chalk: 5.6.2
-      chokidar: 5.0.0
-      chromium-bidi: 13.0.1(devtools-protocol@0.0.1575685)
-      cli-highlight: 2.1.11
-      commander: 14.0.2
-      croner: 9.1.0
-      detect-libc: 2.1.2
-      discord-api-types: 0.38.37
-      dotenv: 17.2.3
-      express: 5.2.1
-      file-type: 21.3.0
-      grammy: 1.39.3
-      hono: 4.11.4
-      jiti: 2.6.1
-      json5: 2.2.3
-      jszip: 3.10.1
-      linkedom: 0.18.12
-      long: 5.3.2
-      markdown-it: 14.1.0
-      node-edge-tts: 1.2.9
-      osc-progress: 0.3.0
-      pdfjs-dist: 5.4.530
-      playwright-core: 1.58.0
-      proper-lockfile: 4.1.2
-      qrcode-terminal: 0.12.0
-      sharp: 0.34.5
-      sqlite-vec: 0.1.7-alpha.2
-      tar: 7.5.4
-      tslog: 4.10.2
-      undici: 7.19.2
-      ws: 8.19.0
-      yaml: 2.8.2
-      zod: 4.3.6
-    optionalDependencies:
-      '@napi-rs/canvas': 0.1.89
-      node-llama-cpp: 3.15.0(typescript@5.9.3)
-    transitivePeerDependencies:
-      - '@discordjs/opus'
-      - '@modelcontextprotocol/sdk'
-      - '@types/express'
-      - audio-decode
-      - aws-crt
-      - bufferutil
-      - canvas
-      - debug
-      - devtools-protocol
-      - encoding
-      - ffmpeg-static
-      - jimp
-      - link-preview-js
-      - node-opus
-      - opusscript
-      - supports-color
-      - typescript
-      - utf-8-validate
 
   cli-cursor@5.0.0:
     dependencies:
@@ -11000,6 +10943,84 @@ snapshots:
 
   openapi-types@12.1.3: {}
 
+  openclaw@2026.1.29(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.11.4)(zod@4.3.6))(@types/express@5.0.6)(devtools-protocol@0.0.1575685)(typescript@5.9.3):
+    dependencies:
+      '@agentclientprotocol/sdk': 0.13.1(zod@4.3.6)
+      '@aws-sdk/client-bedrock': 3.975.0
+      '@buape/carbon': 0.14.0(hono@4.11.4)
+      '@clack/prompts': 0.11.0
+      '@grammyjs/runner': 2.0.3(grammy@1.39.3)
+      '@grammyjs/transformer-throttler': 1.2.1(grammy@1.39.3)
+      '@homebridge/ciao': 1.3.4
+      '@line/bot-sdk': 10.6.0
+      '@lydell/node-pty': 1.2.0-beta.3
+      '@mariozechner/pi-agent-core': 0.49.3(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.11.4)(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
+      '@mariozechner/pi-ai': 0.49.3(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.11.4)(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
+      '@mariozechner/pi-coding-agent': 0.49.3(@modelcontextprotocol/sdk@1.25.3(@cfworker/json-schema@4.1.1)(hono@4.11.4)(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
+      '@mariozechner/pi-tui': 0.49.3
+      '@mozilla/readability': 0.6.0
+      '@sinclair/typebox': 0.34.47
+      '@slack/bolt': 4.6.0(@types/express@5.0.6)
+      '@slack/web-api': 7.13.0
+      '@whiskeysockets/baileys': 7.0.0-rc.9(sharp@0.34.5)
+      ajv: 8.17.1
+      body-parser: 2.2.2
+      chalk: 5.6.2
+      chokidar: 5.0.0
+      chromium-bidi: 13.0.1(devtools-protocol@0.0.1575685)
+      cli-highlight: 2.1.11
+      commander: 14.0.2
+      croner: 9.1.0
+      detect-libc: 2.1.2
+      discord-api-types: 0.38.37
+      dotenv: 17.2.3
+      express: 5.2.1
+      file-type: 21.3.0
+      grammy: 1.39.3
+      hono: 4.11.4
+      jiti: 2.6.1
+      json5: 2.2.3
+      jszip: 3.10.1
+      linkedom: 0.18.12
+      long: 5.3.2
+      markdown-it: 14.1.0
+      node-edge-tts: 1.2.9
+      osc-progress: 0.3.0
+      pdfjs-dist: 5.4.530
+      playwright-core: 1.58.0
+      proper-lockfile: 4.1.2
+      qrcode-terminal: 0.12.0
+      sharp: 0.34.5
+      sqlite-vec: 0.1.7-alpha.2
+      tar: 7.5.4
+      tslog: 4.10.2
+      undici: 7.19.2
+      ws: 8.19.0
+      yaml: 2.8.2
+      zod: 4.3.6
+    optionalDependencies:
+      '@napi-rs/canvas': 0.1.89
+      node-llama-cpp: 3.15.0(typescript@5.9.3)
+    transitivePeerDependencies:
+      - '@discordjs/opus'
+      - '@modelcontextprotocol/sdk'
+      - '@types/express'
+      - audio-decode
+      - aws-crt
+      - bufferutil
+      - canvas
+      - debug
+      - devtools-protocol
+      - encoding
+      - ffmpeg-static
+      - jimp
+      - link-preview-js
+      - node-opus
+      - opusscript
+      - supports-color
+      - typescript
+      - utf-8-validate
+
   openurl@1.1.1: {}
 
   opus-encdec@0.1.1: {}
@@ -11519,6 +11540,8 @@ snapshots:
   sdp@3.2.1: {}
 
   semver@5.7.2: {}
+
+  semver@6.3.1: {}
 
   semver@7.7.3: {}
 
@@ -12226,7 +12249,7 @@ snapshots:
     dependencies:
       sdp: 3.2.1
 
-  wechaty-puppet-feishu@0.0.3(@juzi/wechaty@1.0.139(@juzi/wechaty-puppet@1.0.130(rxjs@7.8.2))(brolog@1.14.2)(redux@4.2.1)(rxjs@7.8.2))(brolog@1.14.2)(redux@4.2.1)(rxjs@7.8.2):
+  wechaty-puppet-feishu@0.0.5(@juzi/wechaty@1.0.139(@juzi/wechaty-puppet@1.0.130(rxjs@7.8.2))(brolog@1.14.2)(redux@4.2.1)(rxjs@7.8.2))(brolog@1.14.2)(redux@4.2.1)(rxjs@7.8.2):
     dependencies:
       '@juzi/file-box': 1.8.2
       '@juzi/wechaty': 1.0.139(@juzi/wechaty-puppet@1.0.130(rxjs@7.8.2))(brolog@1.14.2)(redux@4.2.1)(rxjs@7.8.2)

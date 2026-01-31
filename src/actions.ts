@@ -1,4 +1,4 @@
-import type { ChannelMessageActionAdapter } from "clawdbot/plugin-sdk";
+import type { ChannelMessageActionAdapter } from "openclaw/plugin-sdk";
 
 /**
  * Wechaty message actions

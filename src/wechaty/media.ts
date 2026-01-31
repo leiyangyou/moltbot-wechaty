@@ -3,7 +3,7 @@ import { FileBox } from "@juzi/file-box";
 import fs from "fs";
 import path from "path";
 import os from "os";
-import type { ClawdbotConfig } from "clawdbot/plugin-sdk";
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
 import { getWechatyRuntime } from "../runtime.js";
 
 export type WechatyMediaInfo = {

@@ -1,5 +1,5 @@
 # Wechaty Channel Configuration Example
-# Copy relevant sections to your ~/.clawdbot/config.yaml
+# Copy relevant sections to your ~/.openclaw/config.yaml
 
 # ====================================
 # Option 1: Feishu (Lark)
@@ -40,7 +40,7 @@ channels:
     # Direct message (DM) security policy
     dm:
       # Policy options:
-      # - "pairing": Require approval via 'clawdbot pairing approve wechaty <id>'
+      # - "pairing": Require approval via 'openclaw pairing approve wechaty <id>'
       # - "allowlist": Only users in allowFrom can message the bot
       # - "open": Anyone can message the bot (not recommended)
       policy: "pairing"

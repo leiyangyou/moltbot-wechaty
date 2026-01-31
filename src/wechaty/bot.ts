@@ -54,7 +54,7 @@ export function createWechatyBot(opts: WechatyBotOptions): Wechaty {
 
   // Build bot configuration based on puppet type
   const botConfig: any = {
-    name: opts.name || "clawdbot-wechaty",
+    name: opts.name || "openclaw-wechaty",
   };
 
   // Handle Feishu puppet (uses PuppetFeishu class directly)

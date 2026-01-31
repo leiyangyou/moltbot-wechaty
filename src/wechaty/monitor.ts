@@ -4,7 +4,7 @@ import {
   logInboundDrop,
   resolveMentionGatingWithBypass,
   type AllowlistMatch,
-} from "clawdbot/plugin-sdk";
+} from "openclaw/plugin-sdk";
 import { createWechatyBot, startWechatyBot, stopWechatyBot } from "./bot.js";
 import { setActiveWechatyBot, clearActiveWechatyBot } from "./send.js";
 import { resolveWechatyAccount, type ResolvedWechatyAccount } from "./accounts.js";
@@ -504,7 +504,7 @@ export async function monitorWechatyProvider(opts: MonitorWechatyOpts): Promise<
 
   try {
     bot = createWechatyBot({
-      name: `clawdbot-${account.accountId}`,
+      name: `openclaw-${account.accountId}`,
       puppet: account.puppet,
       puppetOptions: account.puppetOptions,
       runtime: { log, error: logError },
@@ -569,12 +569,12 @@ export async function monitorWechatyProvider(opts: MonitorWechatyOpts): Promise<
                 await sendMessageWechaty(
                   from.id,
                   [
-                    "Clawdbot: access not configured.",
+                    "Openclaw: access not configured.",
                     "",
                     `Pairing code: ${processCheck.pairingCode}`,
                     "",
                     "Ask the bot owner to approve with:",
-                    `clawdbot pairing approve wechaty ${processCheck.pairingCode}`,
+                    `openclaw pairing approve wechaty ${processCheck.pairingCode}`,
                   ].join("\n"),
                 );
               } catch (err) {
