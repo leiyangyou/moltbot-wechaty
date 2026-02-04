@@ -80,6 +80,12 @@ export const wechatyPlugin: ChannelPlugin<ResolvedWechatyAccount> = {
     emotions: true, // Stickers/GIFs via sendEmotion action
   },
 
+  agentPrompt: {
+    messageToolHints: () => [
+      "- Stickers/GIFs: Use `action=sendEmotion` with `to=<target>` and `url=<gif_or_sticker_url>` to send animated stickers or GIFs.",
+    ],
+  },
+
   reload: { configPrefixes: ["channels.wechaty"] },
   configSchema: buildChannelConfigSchema(WechatyConfigSchema),
 
