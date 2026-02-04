@@ -1,25 +1,53 @@
-import type { ChannelMessageActionAdapter } from "openclaw/plugin-sdk";
-import { sendLinkCardWechaty, sendMessageWechaty } from "./wechaty/send.js";
+import type {
+  ChannelMessageActionAdapter,
+  ChannelMessageActionName,
+  ChannelToolSend,
+  OpenClawConfig,
+} from "openclaw/plugin-sdk";
+import { jsonResult, readStringParam } from "openclaw/plugin-sdk";
 
-/**
- * Wechaty message actions
- * Supports:
- * - Link cards (rich text) via the "send" action with card parameter
- * - Stickers/GIFs via the "sticker" action with url/mediaUrl parameter
- */
+import { listWechatyAccountIds, resolveWechatyAccount } from "./wechaty/accounts.js";
+import { recallMessageWechaty, sendLinkCardWechaty, sendMessageWechaty } from "./wechaty/send.js";
+import type { CoreConfig } from "./types.js";
+
+const providerId = "wechaty";
+
+function hasEnabledAccount(cfg: OpenClawConfig): boolean {
+  const accountIds = listWechatyAccountIds(cfg as CoreConfig);
+  return accountIds.some((accountId) => {
+    const account = resolveWechatyAccount({ cfg: cfg as CoreConfig, accountId });
+    return account.enabled && account.configured;
+  });
+}
+
 export const wechatyMessageActions: ChannelMessageActionAdapter = {
-  listActions: () => ["sticker"],
-  supportsCards: () => true,
+  listActions: ({ cfg }) => {
+    if (!hasEnabledAccount(cfg)) return [];
+    const actions = new Set<ChannelMessageActionName>(["sticker", "unsend"]);
+    return Array.from(actions);
+  },
 
-  handleAction: async (ctx) => {
-    // Handle send action with card parameter
-    if (ctx.action === "send" && ctx.params.card) {
-      const card = ctx.params.card as Record<string, unknown>;
+  supportsButtons: () => false,
+  supportsCards: ({ cfg }) => hasEnabledAccount(cfg),
+
+  extractToolSend: ({ args }): ChannelToolSend | null => {
+    const action = typeof args.action === "string" ? args.action.trim() : "";
+    if (action !== "sendMessage") return null;
+    const to = typeof args.to === "string" ? args.to : undefined;
+    if (!to) return null;
+    const accountId = typeof args.accountId === "string" ? args.accountId.trim() : undefined;
+    return { to, accountId };
+  },
+
+  handleAction: async ({ action, params, accountId }) => {
+    // Handle send action with card parameter (link cards)
+    if (action === "send" && params.card) {
+      const card = params.card as Record<string, unknown>;
       const to =
-        typeof ctx.params.to === "string"
-          ? ctx.params.to.trim()
-          : typeof ctx.params.target === "string"
-            ? ctx.params.target.trim()
+        typeof params.to === "string"
+          ? params.to.trim()
+          : typeof params.target === "string"
+            ? params.target.trim()
             : "";
 
       if (!to) {
@@ -46,7 +74,7 @@ export const wechatyMessageActions: ChannelMessageActionAdapter = {
             description: typeof card.description === "string" ? card.description : undefined,
             thumbnailUrl: typeof card.thumbnailUrl === "string" ? card.thumbnailUrl : undefined,
           },
-          { accountId: ctx.accountId ?? undefined }
+          { accountId: accountId ?? undefined }
         );
 
         return {
@@ -75,12 +103,12 @@ export const wechatyMessageActions: ChannelMessageActionAdapter = {
     }
 
     // Handle sticker action for stickers/GIFs
-    if (ctx.action === "sticker") {
+    if (action === "sticker") {
       const to =
-        typeof ctx.params.to === "string"
-          ? ctx.params.to.trim()
-          : typeof ctx.params.target === "string"
-            ? ctx.params.target.trim()
+        typeof params.to === "string"
+          ? params.to.trim()
+          : typeof params.target === "string"
+            ? params.target.trim()
             : "";
 
       if (!to) {
@@ -91,10 +119,10 @@ export const wechatyMessageActions: ChannelMessageActionAdapter = {
       }
 
       const mediaUrl =
-        typeof ctx.params.url === "string"
-          ? ctx.params.url.trim()
-          : typeof ctx.params.mediaUrl === "string"
-            ? ctx.params.mediaUrl.trim()
+        typeof params.url === "string"
+          ? params.url.trim()
+          : typeof params.mediaUrl === "string"
+            ? params.mediaUrl.trim()
             : "";
 
       if (!mediaUrl) {
@@ -108,7 +136,7 @@ export const wechatyMessageActions: ChannelMessageActionAdapter = {
         const result = await sendMessageWechaty(to, "", {
           mediaUrl,
           mediaType: "emotion",
-          accountId: ctx.accountId ?? undefined,
+          accountId: accountId ?? undefined,
         });
 
         return {
@@ -137,7 +165,34 @@ export const wechatyMessageActions: ChannelMessageActionAdapter = {
       }
     }
 
-    // Return null to fall through to default handler for other actions
-    return null as never;
+    // Handle unsend action for message recall
+    if (action === "unsend") {
+      const messageId = readStringParam(params, "messageId", { required: true });
+
+      try {
+        const success = await recallMessageWechaty(messageId ?? "", {
+          accountId: accountId ?? undefined,
+        });
+
+        if (!success) {
+          return jsonResult({
+            ok: false,
+            error: "Failed to unsend message - message may be too old or not sent by the bot",
+          });
+        }
+
+        return jsonResult({
+          ok: true,
+          messageId,
+        });
+      } catch (error) {
+        return jsonResult({
+          ok: false,
+          error: error instanceof Error ? error.message : "Failed to unsend Wechaty message",
+        });
+      }
+    }
+
+    throw new Error(`Action ${action} is not supported for provider ${providerId}.`);
   },
 };

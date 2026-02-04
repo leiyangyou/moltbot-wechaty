@@ -261,3 +261,24 @@ export async function sendLinkCardWechaty(
 
   return { messageId: undefined };
 }
+
+export async function recallMessageWechaty(
+  messageId: string,
+  opts?: { accountId?: string; bot?: Wechaty }
+): Promise<boolean> {
+  const bot = opts?.bot ?? getActiveWechatyBot(opts?.accountId);
+
+  if (!bot) {
+    throw new Error(
+      `Wechaty bot not initialized${opts?.accountId ? ` for account: ${opts.accountId}` : ""}`
+    );
+  }
+
+  try {
+    const success = await bot.puppet.messageRecall(messageId);
+    return success;
+  } catch (error) {
+    console.error(`Failed to recall message ${messageId}: ${String(error)}`);
+    throw error;
+  }
+}
