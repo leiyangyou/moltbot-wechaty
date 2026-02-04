@@ -34,6 +34,7 @@ import {
   listWechatyDirectoryGroupsLive,
   listWechatyDirectoryPeersLive,
 } from "./directory-live.js";
+import { createWechatyForwardTool } from "./agent-tools/index.js";
 
 const meta = {
   id: "wechaty",
@@ -293,6 +294,7 @@ export const wechatyPlugin: ChannelPlugin<ResolvedWechatyAccount> = {
 
   outbound: wechatyOutbound,
   actions: wechatyMessageActions,
+  agentTools: () => [createWechatyForwardTool()],
 
   status: {
     defaultRuntime: {
