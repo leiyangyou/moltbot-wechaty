@@ -78,12 +78,12 @@ export const wechatyPlugin: ChannelPlugin<ResolvedWechatyAccount> = {
     media: true,
     voice: true,
     location: true,
-    emotions: true, // Stickers/GIFs via sendEmotion action
+    emotions: true, // Stickers/GIFs via sticker action
   },
 
   agentPrompt: {
     messageToolHints: () => [
-      "- Stickers/GIFs: Use `action=sendEmotion` with `to=<target>` and `url=<gif_or_sticker_url>` to send animated stickers or GIFs.",
+      "- Stickers/GIFs: Use `action=sticker` with `to=<target>` and `url=<gif_or_sticker_url>` to send animated stickers or GIFs.",
       "- Link cards supported. Use `action=send` with `card={url, title?, description?, thumbnailUrl?}` to send rich link cards. Only `url` is required - title/description/thumbnailUrl are auto-fetched from Open Graph tags if omitted.",
     ],
   },

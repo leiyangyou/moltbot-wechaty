@@ -5,10 +5,10 @@ import { sendLinkCardWechaty, sendMessageWechaty } from "./wechaty/send.js";
  * Wechaty message actions
  * Supports:
  * - Link cards (rich text) via the "send" action with card parameter
- * - Stickers/GIFs via the "sendEmotion" action with url/mediaUrl parameter
+ * - Stickers/GIFs via the "sticker" action with url/mediaUrl parameter
  */
 export const wechatyMessageActions: ChannelMessageActionAdapter = {
-  listActions: () => ["sendEmotion"],
+  listActions: () => ["sticker"],
   supportsCards: () => true,
 
   handleAction: async (ctx) => {
@@ -74,8 +74,8 @@ export const wechatyMessageActions: ChannelMessageActionAdapter = {
       }
     }
 
-    // Handle sendEmotion action for stickers/GIFs
-    if (ctx.action === "sendEmotion") {
+    // Handle sticker action for stickers/GIFs
+    if (ctx.action === "sticker") {
       const to =
         typeof ctx.params.to === "string"
           ? ctx.params.to.trim()
@@ -86,7 +86,7 @@ export const wechatyMessageActions: ChannelMessageActionAdapter = {
       if (!to) {
         return {
           isError: true,
-          content: [{ type: "text", text: "sendEmotion requires a target (to)." }],
+          content: [{ type: "text", text: "sticker action requires a target (to)." }],
         };
       }
 
@@ -100,7 +100,7 @@ export const wechatyMessageActions: ChannelMessageActionAdapter = {
       if (!mediaUrl) {
         return {
           isError: true,
-          content: [{ type: "text", text: "sendEmotion requires a url or mediaUrl field." }],
+          content: [{ type: "text", text: "sticker action requires a url or mediaUrl field." }],
         };
       }
 
@@ -118,7 +118,7 @@ export const wechatyMessageActions: ChannelMessageActionAdapter = {
               text: JSON.stringify({
                 ok: true,
                 channel: "wechaty",
-                action: "sendEmotion",
+                action: "sticker",
                 messageId: result.messageId,
               }),
             },
@@ -130,7 +130,7 @@ export const wechatyMessageActions: ChannelMessageActionAdapter = {
           content: [
             {
               type: "text",
-              text: `Failed to send emotion: ${error instanceof Error ? error.message : String(error)}`,
+              text: `Failed to send sticker: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
         };
