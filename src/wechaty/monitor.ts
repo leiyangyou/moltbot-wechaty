@@ -8,7 +8,7 @@ import {
 import { createWechatyBot, startWechatyBot, stopWechatyBot } from "./bot.js";
 import { setActiveWechatyBot, clearActiveWechatyBot } from "./send.js";
 import { resolveWechatyAccount, type ResolvedWechatyAccount } from "./accounts.js";
-import type { CoreConfig, WechatyMessageContext, WechatyMessageType } from "../types.js";
+import type { CoreConfig, MentionedUser, WechatyMessageContext, WechatyMessageType } from "../types.js";
 import { getWechatyRuntime } from "../runtime.js";
 import { sendMessageWechaty } from "./send.js";
 import { resolveWechatyMediaList, buildWechatyMediaPayload } from "./media.js";
@@ -297,6 +297,7 @@ async function handleWechatyMessage(params: {
       messageId,
       timestamp,
       mentionSelf,
+      mentionedUsers,
     } = context;
 
     const isGroup = chatType === "group";
@@ -358,6 +359,13 @@ async function handleWechatyMessage(params: {
     const commandAuthorized =
       !isGroup || core.channel.commands.isCommandAuthorized(senderId, config);
 
+    // Format mentioned users for agent context (id and name if available)
+    const mentionedUsersStr = mentionedUsers?.length
+      ? mentionedUsers
+          .map((u) => (u.name ? `${u.name} (${u.id})` : u.id))
+          .join(", ")
+      : undefined;
+
     // Finalize context payload
     const ctxPayload = core.channel.reply.finalizeInboundContext({
       Body: body,
@@ -372,6 +380,7 @@ async function handleWechatyMessage(params: {
       SenderName: senderName || undefined,
       SenderId: senderId,
       WasMentioned: isGroup ? effectiveWasMentioned : undefined,
+      MentionedUsers: mentionedUsersStr,
       CommandAuthorized: commandAuthorized,
       Provider: "wechaty",
       Surface: "wechaty",
@@ -533,13 +542,24 @@ export async function monitorWechatyProvider(opts: MonitorWechatyOpts): Promise<
           const text = message.text();
           const messageType = convertMessageType(message.type());
 
-          // Check if bot is mentioned in group
+          // Check if bot is mentioned in group and collect mention list
           let mentionSelf = false;
+          let mentionedUsers: MentionedUser[] = [];
           if (room && currentUser) {
-           mentionSelf = (await message.mentionSelf());
-           const isMentionAll = await message.isMentionAll()
-            if(isMentionAll) {
-              mentionSelf = false
+            mentionSelf = await message.mentionSelf();
+            const isMentionAll = await message.isMentionAll();
+            if (isMentionAll) {
+              mentionSelf = false;
+            }
+            // Get list of mentioned users
+            try {
+              const mentions = await message.mentionList();
+              mentionedUsers = mentions.map((contact) => ({
+                id: contact.id,
+                name: contact.name() || undefined,
+              }));
+            } catch {
+              // mentionList may not be supported by all puppets
             }
           }
 
@@ -556,6 +576,7 @@ export async function monitorWechatyProvider(opts: MonitorWechatyOpts): Promise<
             roomId: room?.id,
             roomTopic: room ? await room.topic() : undefined,
             mentionSelf,
+            mentionedUsers: mentionedUsers.length > 0 ? mentionedUsers : undefined,
             timestamp: message.date().getTime(),
           };
 

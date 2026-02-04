@@ -142,6 +142,13 @@ export const wechatyPlugin: ChannelPlugin<ResolvedWechatyAccount> = {
     resolveToolPolicy: resolveWechatyGroupToolPolicy,
   },
 
+  mentions: {
+    // Strip WeChat @mention patterns from command body
+    // Matches @username, @中文名, @all, @所有人
+    // Core also derives patterns from agent identity.name if configured
+    stripPatterns: () => ["@[\\w\\u4e00-\\u9fa5]+"],
+  },
+
   threading: {
     resolveReplyToMode: ({ cfg }) =>
       (cfg as CoreConfig).channels?.wechaty?.replyToMode ?? "off",

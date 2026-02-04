@@ -65,6 +65,11 @@ export type WechatyMessageType =
   | "contact"
   | "unknown";
 
+export type MentionedUser = {
+  id: string;
+  name?: string;
+};
+
 export type WechatyMessageContext = {
   channelId: "wechaty";
   accountId: string;
@@ -77,5 +82,6 @@ export type WechatyMessageContext = {
   roomId?: string;
   roomTopic?: string;
   mentionSelf?: boolean;
+  mentionedUsers?: MentionedUser[];
   timestamp?: number;
 };
