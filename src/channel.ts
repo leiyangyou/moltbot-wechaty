@@ -77,6 +77,7 @@ export const wechatyPlugin: ChannelPlugin<ResolvedWechatyAccount> = {
     media: true,
     voice: true,
     location: true,
+    emotions: true, // Stickers/GIFs via sendEmotion action
   },
 
   reload: { configPrefixes: ["channels.wechaty"] },

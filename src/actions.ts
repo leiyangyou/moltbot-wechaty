@@ -3,7 +3,9 @@ import { sendLinkCardWechaty, sendMessageWechaty } from "./wechaty/send.js";
 
 /**
  * Wechaty message actions
- * Supports link cards (rich text) via the "send" action with card parameter
+ * Supports:
+ * - Link cards (rich text) via the "send" action with card parameter
+ * - Stickers/GIFs via the "sendEmotion" action with url/mediaUrl parameter
  */
 export const wechatyMessageActions: ChannelMessageActionAdapter = {
   supportsCards: () => true,
