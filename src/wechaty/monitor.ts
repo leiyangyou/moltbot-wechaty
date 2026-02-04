@@ -359,11 +359,10 @@ async function handleWechatyMessage(params: {
     const commandAuthorized =
       !isGroup || core.channel.commands.isCommandAuthorized(senderId, config);
 
-    // Format mentioned users for agent context (id and name if available)
-    const mentionedUsersStr = mentionedUsers?.length
-      ? mentionedUsers
-          .map((u) => (u.name ? `${u.name} (${u.id})` : u.id))
-          .join(", ")
+    // Format mentioned users as JSON array for agent context
+    // Format: [{"id": "wxid_abc", "name": "Alice"}, {"id": "wxid_def"}]
+    const mentionedUsersJson = mentionedUsers?.length
+      ? JSON.stringify(mentionedUsers)
       : undefined;
 
     // Finalize context payload
@@ -380,7 +379,7 @@ async function handleWechatyMessage(params: {
       SenderName: senderName || undefined,
       SenderId: senderId,
       WasMentioned: isGroup ? effectiveWasMentioned : undefined,
-      MentionedUsers: mentionedUsersStr,
+      MentionedUsers: mentionedUsersJson,
       CommandAuthorized: commandAuthorized,
       Provider: "wechaty",
       Surface: "wechaty",
