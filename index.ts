@@ -1,4 +1,4 @@
-import type { ClawdbotPluginApi } from "openclaw/plugin-sdk";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
 import { emptyPluginConfigSchema } from "openclaw/plugin-sdk";
 
 import { wechatyPlugin } from "./src/channel.js";
@@ -9,7 +9,7 @@ const plugin = {
   name: "Wechaty",
   description: "Wechaty channel plugin for multi-platform IM support (Feishu, Lark etc.)",
   configSchema: emptyPluginConfigSchema(),
-  register(api: ClawdbotPluginApi) {
+  register(api: OpenClawPluginApi) {
     setWechatyRuntime(api.runtime);
     api.registerChannel({ plugin: wechatyPlugin });
   },

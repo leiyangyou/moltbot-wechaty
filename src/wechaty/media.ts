@@ -3,7 +3,7 @@ import { FileBox } from "@juzi/file-box";
 import fs from "fs";
 import path from "path";
 import os from "os";
-import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import type { OpenClawConfig } from "openclaw/plugin-sdk";
 import { getWechatyRuntime } from "../runtime.js";
 
 export type WechatyMediaInfo = {
@@ -35,7 +35,7 @@ function inferPlaceholder(messageType: number): string {
  * Similar to Feishu's resolveFeishuMediaList().
  */
 export async function resolveWechatyMediaList(params: {
-  cfg: ClawdbotConfig;
+  cfg: OpenClawConfig;
   message: Message;
   maxBytes: number;
   log?: (msg: string) => void;

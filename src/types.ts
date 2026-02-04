@@ -1,4 +1,4 @@
-// CoreConfig extends the full ClawdbotConfig with Wechaty-specific channel config
+// CoreConfig extends the full OpenClawConfig with Wechaty-specific channel config
 export type CoreConfig = {
   channels?: {
     wechaty?: WechatyChannelConfig;

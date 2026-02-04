@@ -1,7 +1,7 @@
 import type {
   ChannelOnboardingAdapter,
   ChannelOnboardingDmPolicy,
-  ClawdbotConfig,
+  OpenClawConfig,
   DmPolicy,
   WizardPrompter,
 } from "openclaw/plugin-sdk";
@@ -17,7 +17,7 @@ import {
 
 const channel = "wechaty" as const;
 
-function setWechatyDmPolicy(cfg: ClawdbotConfig, dmPolicy: DmPolicy): ClawdbotConfig {
+function setWechatyDmPolicy(cfg: OpenClawConfig, dmPolicy: DmPolicy): OpenClawConfig {
   const coreConfig = cfg as CoreConfig;
   return {
     ...cfg,
@@ -49,10 +49,10 @@ async function noteWechatyHelp(prompter: WizardPrompter): Promise<void> {
 }
 
 async function promptWechatyAllowFrom(params: {
-  cfg: ClawdbotConfig;
+  cfg: OpenClawConfig;
   prompter: WizardPrompter;
   accountId: string;
-}): Promise<ClawdbotConfig> {
+}): Promise<OpenClawConfig> {
   const { cfg, prompter, accountId } = params;
   const coreConfig = cfg as CoreConfig;
   const resolved = resolveWechatyAccount({ cfg: coreConfig, accountId });
@@ -129,10 +129,10 @@ async function promptWechatyAllowFrom(params: {
 }
 
 async function promptWechatyAllowFromForAccount(params: {
-  cfg: ClawdbotConfig;
+  cfg: OpenClawConfig;
   prompter: WizardPrompter;
   accountId?: string;
-}): Promise<ClawdbotConfig> {
+}): Promise<OpenClawConfig> {
   const coreConfig = params.cfg as CoreConfig;
   const resolvedAccountId = params.accountId ?? resolveDefaultWechatyAccountId(coreConfig);
   return promptWechatyAllowFrom({
@@ -196,7 +196,7 @@ export const wechatyOnboardingAdapter: ChannelOnboardingAdapter = {
     accountOverrides,
     shouldPromptAccountIds,
   }: {
-    cfg: ClawdbotConfig;
+    cfg: OpenClawConfig;
     prompter: WizardPrompter;
     accountOverrides: Partial<Record<string, string>>;
     shouldPromptAccountIds: boolean;
@@ -215,7 +215,7 @@ export const wechatyOnboardingAdapter: ChannelOnboardingAdapter = {
         prompter,
         label: "Wechaty",
         currentId: wechatyAccountId,
-        listAccountIds: (config: ClawdbotConfig) => listWechatyAccountIds(config as CoreConfig),
+        listAccountIds: (config: OpenClawConfig) => listWechatyAccountIds(config as CoreConfig),
         defaultAccountId: defaultWechatyAccountId,
       });
     }
@@ -466,12 +466,12 @@ export const wechatyOnboardingAdapter: ChannelOnboardingAdapter = {
       };
     }
 
-    return { cfg: next as ClawdbotConfig, accountId: wechatyAccountId };
+    return { cfg: next as OpenClawConfig, accountId: wechatyAccountId };
   },
 
   dmPolicy,
 
-  disable: (cfg: ClawdbotConfig) => {
+  disable: (cfg: OpenClawConfig) => {
     const coreConfig = cfg as CoreConfig;
     return {
       ...cfg,
@@ -479,6 +479,6 @@ export const wechatyOnboardingAdapter: ChannelOnboardingAdapter = {
         ...coreConfig.channels,
         wechaty: { ...coreConfig.channels?.wechaty, enabled: false },
       },
-    } as ClawdbotConfig;
+    } as OpenClawConfig;
   },
 };
