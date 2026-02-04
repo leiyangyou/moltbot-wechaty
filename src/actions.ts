@@ -8,6 +8,7 @@ import { sendLinkCardWechaty, sendMessageWechaty } from "./wechaty/send.js";
  * - Stickers/GIFs via the "sendEmotion" action with url/mediaUrl parameter
  */
 export const wechatyMessageActions: ChannelMessageActionAdapter = {
+  listActions: () => ["sendEmotion"],
   supportsCards: () => true,
 
   handleAction: async (ctx) => {
