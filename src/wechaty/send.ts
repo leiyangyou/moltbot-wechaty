@@ -1,6 +1,6 @@
 import type { Wechaty, Contact, Room } from "@juzi/wechaty";
 import { UrlLink } from "@juzi/wechaty";
-import { prepareWechatyMedia } from "./media.js";
+import { prepareWechatyMedia, isEmotionType } from "./media.js";
 import { fetchOGMetadata } from "./og-fetch.js";
 
 export type WechatySendOpts = {
@@ -8,7 +8,7 @@ export type WechatySendOpts = {
   text?: string;
   mediaUrl?: string;
   mediaBuffer?: Buffer;
-  mediaType?: "image" | "video" | "audio" | "file";
+  mediaType?: "image" | "video" | "audio" | "file" | "emotion";
   fileName?: string;
   accountId?: string;
   bot?: Wechaty;
@@ -99,6 +99,27 @@ export async function sendMessageWechaty(
       });
 
       if (mediaResult) {
+        // Detect emotion type from explicit mediaType, filename, or MIME detection
+        const isEmotion =
+          opts.mediaType === "emotion" ||
+          isEmotionType(undefined, mediaResult.fileName);
+
+        if (isEmotion) {
+          // Try to send via puppet's emotion API
+          const puppet = bot.puppet as any;
+          if (typeof puppet.messageSendEmoji === "function") {
+            try {
+              await puppet.messageSendEmoji(targetId, mediaResult.fileBox);
+              return { messageId: undefined };
+            } catch (emotionError) {
+              console.warn(
+                `Emotion send failed, falling back to regular media: ${String(emotionError)}`
+              );
+              // Fall through to regular say()
+            }
+          }
+        }
+
         await recipient.say(mediaResult.fileBox);
       }
     } catch (error) {
@@ -122,6 +143,54 @@ export async function reactMessageWechaty(
   // Note: Wechaty doesn't have native reaction support yet
   // This is a placeholder for future implementation or custom puppet support
   console.warn("Wechaty reactions not yet supported");
+}
+
+/**
+ * Send an emotion/sticker via Wechaty puppet's messageSendEmoji API.
+ * Supported by WeChatFerry and similar puppets.
+ *
+ * @param target - Target contact or room ID
+ * @param emotionFileBox - FileBox containing the emotion/sticker data
+ * @param opts - Optional account/bot configuration
+ */
+export async function sendEmotionWechaty(
+  target: string,
+  emotionFileBox: any,
+  opts?: { accountId?: string; bot?: Wechaty }
+): Promise<{ messageId?: string }> {
+  const bot = opts?.bot ?? getActiveWechatyBot(opts?.accountId);
+
+  if (!bot) {
+    throw new Error(
+      `Wechaty bot not initialized${opts?.accountId ? ` for account: ${opts.accountId}` : ""}`
+    );
+  }
+
+  // Parse target
+  const targetId = target.replace(/^wechaty:/i, "").trim();
+
+  // Check if puppet supports messageSendEmoji
+  const puppet = bot.puppet as any;
+  if (typeof puppet.messageSendEmoji !== "function") {
+    // Fallback to regular say() if puppet doesn't support emotions
+    console.warn(
+      "Puppet does not support messageSendEmoji, falling back to regular media send"
+    );
+    return sendMessageWechaty(target, "", {
+      mediaBuffer: await emotionFileBox.toBuffer?.(),
+      mediaType: "image",
+      fileName: emotionFileBox.name,
+      bot,
+    });
+  }
+
+  try {
+    const msgId = await puppet.messageSendEmoji(targetId, emotionFileBox);
+    return { messageId: msgId };
+  } catch (error) {
+    console.error(`Failed to send emotion: ${String(error)}`);
+    throw error;
+  }
 }
 
 export type LinkCardParams = {

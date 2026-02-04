@@ -154,6 +154,27 @@ function isLocalPath(urlOrPath: string): boolean {
  * Prepare media for sending via Wechaty.
  * Handles URLs, local paths, and buffers.
  */
+/**
+ * Check if a MIME type or filename indicates an emotion/sticker (GIF or sticker format).
+ */
+export function isEmotionType(mimeType?: string, fileName?: string): boolean {
+  // Check MIME type for GIF
+  if (mimeType?.toLowerCase() === "image/gif") {
+    return true;
+  }
+
+  // Check filename extension for common sticker/emotion formats
+  if (fileName) {
+    const ext = fileName.toLowerCase().split(".").pop();
+    // GIF, WEBP (animated stickers), and common sticker extensions
+    if (ext === "gif" || ext === "webp") {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export async function prepareWechatyMedia(params: {
   mediaUrl?: string;
   mediaBuffer?: Buffer;

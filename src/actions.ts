@@ -1,5 +1,5 @@
 import type { ChannelMessageActionAdapter } from "openclaw/plugin-sdk";
-import { sendLinkCardWechaty } from "./wechaty/send.js";
+import { sendLinkCardWechaty, sendMessageWechaty } from "./wechaty/send.js";
 
 /**
  * Wechaty message actions
@@ -65,6 +65,69 @@ export const wechatyMessageActions: ChannelMessageActionAdapter = {
             {
               type: "text",
               text: `Failed to send link card: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
+      }
+    }
+
+    // Handle sendEmotion action for stickers/GIFs
+    if (ctx.action === "sendEmotion") {
+      const to =
+        typeof ctx.params.to === "string"
+          ? ctx.params.to.trim()
+          : typeof ctx.params.target === "string"
+            ? ctx.params.target.trim()
+            : "";
+
+      if (!to) {
+        return {
+          isError: true,
+          content: [{ type: "text", text: "sendEmotion requires a target (to)." }],
+        };
+      }
+
+      const mediaUrl =
+        typeof ctx.params.url === "string"
+          ? ctx.params.url.trim()
+          : typeof ctx.params.mediaUrl === "string"
+            ? ctx.params.mediaUrl.trim()
+            : "";
+
+      if (!mediaUrl) {
+        return {
+          isError: true,
+          content: [{ type: "text", text: "sendEmotion requires a url or mediaUrl field." }],
+        };
+      }
+
+      try {
+        const result = await sendMessageWechaty(to, "", {
+          mediaUrl,
+          mediaType: "emotion",
+          accountId: ctx.accountId ?? undefined,
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                ok: true,
+                channel: "wechaty",
+                action: "sendEmotion",
+                messageId: result.messageId,
+              }),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text",
+              text: `Failed to send emotion: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
         };
