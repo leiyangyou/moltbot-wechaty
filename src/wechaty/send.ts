@@ -1,5 +1,7 @@
 import type { Wechaty, Contact, Room } from "@juzi/wechaty";
+import { UrlLink } from "@juzi/wechaty";
 import { prepareWechatyMedia } from "./media.js";
+import { fetchOGMetadata } from "./og-fetch.js";
 
 export type WechatySendOpts = {
   targetId: string;
@@ -120,4 +122,73 @@ export async function reactMessageWechaty(
   // Note: Wechaty doesn't have native reaction support yet
   // This is a placeholder for future implementation or custom puppet support
   console.warn("Wechaty reactions not yet supported");
+}
+
+export type LinkCardParams = {
+  url: string;
+  title?: string;
+  description?: string;
+  thumbnailUrl?: string;
+};
+
+/**
+ * Send a link card (rich text) via Wechaty UrlLink
+ * Auto-fetches Open Graph metadata if title/description/thumbnailUrl not provided
+ */
+export async function sendLinkCardWechaty(
+  target: string,
+  card: LinkCardParams,
+  opts?: { accountId?: string; bot?: Wechaty }
+): Promise<{ messageId?: string }> {
+  const bot = opts?.bot ?? getActiveWechatyBot(opts?.accountId);
+
+  if (!bot) {
+    throw new Error(
+      `Wechaty bot not initialized${opts?.accountId ? ` for account: ${opts.accountId}` : ""}`
+    );
+  }
+
+  // Fetch OG metadata if any field is missing
+  let { title, description, thumbnailUrl } = card;
+  if (!title || !description || !thumbnailUrl) {
+    const og = await fetchOGMetadata(card.url);
+    title = title || og.title || card.url;
+    description = description || og.description || "";
+    thumbnailUrl = thumbnailUrl || og.image;
+  }
+
+  // Find recipient
+  const targetId = target.replace(/^wechaty:/i, "").trim();
+  let recipient: Contact | Room | undefined;
+
+  if (targetId.includes("@chatroom") || targetId.includes("oc_")) {
+    recipient = await bot.Room.find({ id: targetId });
+    if (!recipient) {
+      recipient = await bot.Room.find({ topic: targetId });
+    }
+  } else {
+    recipient = await bot.Contact.find({ id: targetId });
+    if (!recipient) {
+      recipient = await bot.Contact.find({ name: targetId });
+    }
+    if (!recipient) {
+      recipient = await bot.Contact.find({ alias: targetId });
+    }
+  }
+
+  if (!recipient) {
+    throw new Error(`Recipient not found: ${targetId}`);
+  }
+
+  // Create and send UrlLink
+  const urlLink = new UrlLink({
+    title: title.slice(0, 100), // WeChat title limit
+    description: description.slice(0, 300), // WeChat description limit
+    url: card.url,
+    thumbnailUrl: thumbnailUrl,
+  });
+
+  await recipient.say(urlLink);
+
+  return { messageId: undefined };
 }
