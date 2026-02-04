@@ -287,6 +287,12 @@ export const wechatyPlugin: ChannelPlugin<ResolvedWechatyAccount> = {
       lastStopAt: null,
       lastError: null,
     },
+    logSelfId: ({ account, runtime }) => {
+      const botId = account.accountId;
+      if (botId) {
+        runtime.log?.(`wechaty:${botId}`);
+      }
+    },
     collectStatusIssues: (accounts: ChannelAccountSnapshot[]): ChannelStatusIssue[] => {
       const issues: ChannelStatusIssue[] = [];
       for (const account of accounts) {
