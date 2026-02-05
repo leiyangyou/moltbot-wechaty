@@ -307,3 +307,30 @@ export async function setRoomAnnounceWechaty(
     );
   }
 }
+
+/**
+ * Get a room's invite QR code via Wechaty Room.qrcode() API.
+ * The QR code can be scanned to join the room.
+ * Note: Not all puppets support this - depends on puppet implementation.
+ */
+export async function getRoomQRCodeWechaty(
+  roomId: string,
+  opts?: WechatyOperationOpts
+): Promise<string> {
+  const bot = requireBot(opts);
+  const normalizedRoomId = normalizeTargetId(roomId);
+
+  const room = await findRoom(bot, normalizedRoomId);
+  if (!room) {
+    throw new Error(`Room not found: ${normalizedRoomId}`);
+  }
+
+  try {
+    const qrcode = await room.qrcode();
+    return qrcode;
+  } catch (error) {
+    throw new Error(
+      `Failed to get room QR code: ${String(error)}. This puppet may not support roomQRCode.`
+    );
+  }
+}

@@ -6,6 +6,7 @@ import {
   getRoomMembersWechaty,
   createRoomWechaty,
   setRoomAnnounceWechaty,
+  getRoomQRCodeWechaty,
 } from "../../wechaty/operations/room.js";
 
 /**
@@ -16,6 +17,7 @@ import {
  * - members: List room members with optional query filter
  * - create: Create new room with members array and optional topic
  * - set_announce: Set/clear room announcement
+ * - qrcode: Get room invite QR code
  */
 export function createWechatyRoomTool(): ChannelAgentTool {
   return {
@@ -26,7 +28,8 @@ export function createWechatyRoomTool(): ChannelAgentTool {
       "'get' retrieves room details (id, topic, announce, memberCount, ownerId, avatar). " +
       "'members' lists room members with optional query filter. " +
       "'create' creates a new room with specified members and optional topic. " +
-      "'set_announce' sets or clears room announcement (empty string to clear).",
+      "'set_announce' sets or clears room announcement (empty string to clear). " +
+      "'qrcode' gets room invite QR code (not all puppets support this).",
     parameters: Type.Object({
       operation: Type.Union(
         [
@@ -34,14 +37,15 @@ export function createWechatyRoomTool(): ChannelAgentTool {
           Type.Literal("members"),
           Type.Literal("create"),
           Type.Literal("set_announce"),
+          Type.Literal("qrcode"),
         ],
         {
-          description: "The operation to perform: get, members, create, or set_announce",
+          description: "The operation to perform: get, members, create, set_announce, or qrcode",
         }
       ),
       roomId: Type.Optional(
         Type.String({
-          description: "Room ID (xxx@chatroom or oc_xxx). Required for get, members, set_announce",
+          description: "Room ID (xxx@chatroom or oc_xxx). Required for get, members, set_announce, qrcode",
         })
       ),
       members: Type.Optional(
@@ -80,7 +84,7 @@ export function createWechatyRoomTool(): ChannelAgentTool {
         announce,
         accountId,
       } = args as {
-        operation: "get" | "members" | "create" | "set_announce";
+        operation: "get" | "members" | "create" | "set_announce" | "qrcode";
         roomId?: string;
         members?: string[];
         topic?: string;
@@ -212,13 +216,36 @@ export function createWechatyRoomTool(): ChannelAgentTool {
             };
           }
 
+          case "qrcode": {
+            if (!roomId?.trim()) {
+              return {
+                isError: true,
+                content: [{ type: "text", text: "roomId is required for 'qrcode' operation" }],
+              };
+            }
+            const qrcode = await getRoomQRCodeWechaty(roomId.trim(), opts);
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    ok: true,
+                    operation: "qrcode",
+                    roomId: roomId.trim(),
+                    qrcode,
+                  }),
+                },
+              ],
+            };
+          }
+
           default: {
             return {
               isError: true,
               content: [
                 {
                   type: "text",
-                  text: `Unknown operation: ${operation}. Valid operations: get, members, create, set_announce`,
+                  text: `Unknown operation: ${operation}. Valid operations: get, members, create, set_announce, qrcode`,
                 },
               ],
             };
