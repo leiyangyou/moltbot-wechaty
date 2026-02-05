@@ -138,3 +138,6 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 example
+
+# Claude Code local settings
+.claude/settings.local.json
