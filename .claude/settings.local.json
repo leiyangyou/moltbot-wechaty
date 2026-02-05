@@ -12,7 +12,14 @@
       "mcp__plugin_serena_serena__list_dir",
       "mcp__plugin_serena_serena__activate_project",
       "mcp__plugin_serena_serena__read_file",
-      "mcp__plugin_serena_serena__search_for_pattern"
+      "mcp__plugin_serena_serena__search_for_pattern",
+      "Skill(interminai)",
+      "Bash(./scripts/interminai start:*)",
+      "Bash(/Users/leiyang/.claude/skills/interminai/scripts/interminai output:*)",
+      "Bash(/Users/leiyang/.claude/skills/interminai/scripts/interminai input:*)",
+      "Bash(/Users/leiyang/.claude/skills/interminai/scripts/interminai stop:*)",
+      "Bash(./scripts/interminai status:*)",
+      "Bash(./scripts/interminai:*)"
     ]
   }
 }
