@@ -282,3 +282,71 @@ export async function recallMessageWechaty(
     throw error;
   }
 }
+
+/**
+ * Remove a member from a room/group chat.
+ * Requires group admin permissions.
+ *
+ * @param roomId - The room/group ID
+ * @param contactId - The contact ID to remove
+ * @param opts - Optional account/bot configuration
+ */
+export async function removeRoomMemberWechaty(
+  roomId: string,
+  contactId: string,
+  opts?: { accountId?: string; bot?: Wechaty }
+): Promise<void> {
+  const bot = opts?.bot ?? getActiveWechatyBot(opts?.accountId);
+
+  if (!bot) {
+    throw new Error(
+      `Wechaty bot not initialized${opts?.accountId ? ` for account: ${opts.accountId}` : ""}`
+    );
+  }
+
+  // Normalize room ID
+  const normalizedRoomId = roomId.replace(/^wechaty:/i, "").trim();
+
+  // Find the room
+  let room: Room | undefined;
+  try {
+    room = await bot.Room.find({ id: normalizedRoomId });
+    if (!room) {
+      room = await bot.Room.find({ topic: normalizedRoomId });
+    }
+  } catch (error) {
+    throw new Error(`Failed to find room: ${normalizedRoomId} - ${String(error)}`);
+  }
+
+  if (!room) {
+    throw new Error(`Room not found: ${normalizedRoomId}`);
+  }
+
+  // Find the contact to remove
+  const normalizedContactId = contactId.replace(/^wechaty:/i, "").trim();
+  let contact: Contact | undefined;
+  try {
+    contact = await bot.Contact.find({ id: normalizedContactId });
+    if (!contact) {
+      contact = await bot.Contact.find({ name: normalizedContactId });
+    }
+    if (!contact) {
+      contact = await bot.Contact.find({ alias: normalizedContactId });
+    }
+  } catch (error) {
+    throw new Error(`Failed to find contact: ${normalizedContactId} - ${String(error)}`);
+  }
+
+  if (!contact) {
+    throw new Error(`Contact not found: ${normalizedContactId}`);
+  }
+
+  // Remove the member using puppet.roomDel
+  try {
+    await bot.puppet.roomDel(room.id, contact.id);
+  } catch (error) {
+    throw new Error(
+      `Failed to remove member from room: ${String(error)}. Ensure the bot has admin permissions.`
+    );
+  }
+}

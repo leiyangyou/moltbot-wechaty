@@ -7,7 +7,12 @@ import type {
 import { jsonResult, readStringParam } from "openclaw/plugin-sdk";
 
 import { listWechatyAccountIds, resolveWechatyAccount } from "./wechaty/accounts.js";
-import { recallMessageWechaty, sendLinkCardWechaty, sendMessageWechaty } from "./wechaty/send.js";
+import {
+  recallMessageWechaty,
+  removeRoomMemberWechaty,
+  sendLinkCardWechaty,
+  sendMessageWechaty,
+} from "./wechaty/send.js";
 import type { CoreConfig } from "./types.js";
 
 const providerId = "wechaty";
@@ -23,7 +28,7 @@ function hasEnabledAccount(cfg: OpenClawConfig): boolean {
 export const wechatyMessageActions: ChannelMessageActionAdapter = {
   listActions: ({ cfg }) => {
     if (!hasEnabledAccount(cfg)) return [];
-    const actions = new Set<ChannelMessageActionName>(["sticker", "unsend"]);
+    const actions = new Set<ChannelMessageActionName>(["sticker", "unsend", "removeParticipant"]);
     return Array.from(actions);
   },
 
@@ -189,6 +194,51 @@ export const wechatyMessageActions: ChannelMessageActionAdapter = {
         return jsonResult({
           ok: false,
           error: error instanceof Error ? error.message : "Failed to unsend Wechaty message",
+        });
+      }
+    }
+
+    // Handle removeParticipant action for removing members from group chats
+    // Standard schema: to/chatGuid/chatIdentifier/chatId for room, address/participant for contact
+    if (action === "removeParticipant") {
+      const roomId =
+        readStringParam(params, "to") ??
+        readStringParam(params, "chatGuid") ??
+        readStringParam(params, "chatIdentifier") ??
+        readStringParam(params, "chatId");
+
+      const address =
+        readStringParam(params, "address") ?? readStringParam(params, "participant");
+
+      if (!roomId) {
+        return jsonResult({
+          ok: false,
+          error:
+            "removeParticipant action requires a target room (to, chatGuid, chatIdentifier, or chatId)",
+        });
+      }
+
+      if (!address) {
+        return jsonResult({
+          ok: false,
+          error: "removeParticipant action requires an address or participant parameter",
+        });
+      }
+
+      try {
+        await removeRoomMemberWechaty(roomId, address, {
+          accountId: accountId ?? undefined,
+        });
+
+        return jsonResult({
+          ok: true,
+          chatId: roomId,
+          removed: address,
+        });
+      } catch (error) {
+        return jsonResult({
+          ok: false,
+          error: error instanceof Error ? error.message : "Failed to remove participant from room",
         });
       }
     }
