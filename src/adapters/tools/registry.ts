@@ -7,6 +7,23 @@ import { createWechatySelfTool } from "./self.js";
 import { createWechatyFriendshipTool } from "./friendship.js";
 
 /**
+ * Tool factory function type that accepts optional enabled operations.
+ */
+export type ToolFactory = (enabledOperations?: string[]) => ChannelAgentTool;
+
+/**
+ * Registry of all available operations per tool.
+ * Used for validation and filtering.
+ */
+export const TOOL_OPERATIONS: Record<string, readonly string[]> = {
+  wechaty_message: ["forward", "send_contact_card", "history"],
+  wechaty_contact: ["get", "search", "list_tags", "add_tag", "remove_tag", "delete_tag", "set_alias"],
+  wechaty_room: ["get", "members", "create", "set_announce", "qrcode"],
+  wechaty_self: ["get", "qrcode", "set"],
+  wechaty_friendship: ["send", "accept"],
+} as const;
+
+/**
  * Known puppet types and their capabilities.
  * Used for auto-detecting which tools should be available.
  */
@@ -41,7 +58,7 @@ export const PUPPET_CAPABILITIES = {
 /**
  * All available tools and their factory functions.
  */
-export const TOOL_REGISTRY: Record<string, () => ChannelAgentTool> = {
+export const TOOL_REGISTRY: Record<string, ToolFactory> = {
   wechaty_message: createWechatyMessageTool,
   wechaty_contact: createWechatyContactTool,
   wechaty_room: createWechatyRoomTool,
@@ -87,52 +104,174 @@ export function isToolSupportedByPuppet(puppet: string, toolName: string): boole
 }
 
 /**
- * Resolve which tools to expose based on puppet type and config.
+ * Parse a tool entry that may include operation (e.g., "wechaty_message.history")
+ */
+export function parseToolEntry(entry: string): { tool: string; operation?: string } {
+  const dotIndex = entry.indexOf(".");
+  if (dotIndex === -1) {
+    return { tool: entry };
+  }
+  return {
+    tool: entry.slice(0, dotIndex),
+    operation: entry.slice(dotIndex + 1),
+  };
+}
+
+/**
+ * Result of resolving enabled tools with their operations.
+ */
+export type ResolvedToolConfig = {
+  tool: string;
+  /** If undefined, all operations are enabled */
+  enabledOperations?: string[];
+};
+
+/**
+ * Resolve which tools and operations to expose based on puppet type and config.
+ *
+ * Supports both tool-level and operation-level filtering:
+ * - "wechaty_message" - enables/disables entire tool
+ * - "wechaty_message.history" - enables/disables specific operation
  *
  * Priority:
- * 1. If tools.enable is set, use whitelist (only those tools)
- * 2. If tools.disable is set, filter out blacklisted tools
+ * 1. If tools.enable is set, use whitelist (only those tools/operations)
+ * 2. If tools.disable is set, filter out blacklisted tools/operations
  * 3. Otherwise, auto-detect based on puppet capabilities
  */
 export function resolveEnabledTools(params: {
   puppet: string;
   toolsConfig?: WechatyToolsConfig;
-}): string[] {
+}): ResolvedToolConfig[] {
   const { puppet, toolsConfig } = params;
 
   // Priority 1: Explicit whitelist
   if (toolsConfig?.enable && toolsConfig.enable.length > 0) {
-    // Filter to only valid tool names
-    return toolsConfig.enable.filter((name) => name in TOOL_REGISTRY);
+    return resolveWhitelist(toolsConfig.enable);
   }
 
   // Get base tools from puppet capabilities
-  let enabledTools = getToolsForPuppet(puppet);
-
-  // If no puppet-specific tools detected, don't expose any by default
-  // (user can explicitly enable via config)
-  if (enabledTools.length === 0) {
-    enabledTools = [];
+  const baseTools = getToolsForPuppet(puppet);
+  if (baseTools.length === 0) {
+    return [];
   }
+
+  // Start with all operations enabled for each tool
+  let resolved: ResolvedToolConfig[] = baseTools.map((tool) => ({ tool }));
 
   // Priority 2: Apply blacklist
   if (toolsConfig?.disable && toolsConfig.disable.length > 0) {
-    const disabled = new Set(toolsConfig.disable);
-    enabledTools = enabledTools.filter((name) => !disabled.has(name));
+    resolved = applyBlacklist(resolved, toolsConfig.disable);
   }
 
-  return enabledTools;
+  return resolved;
 }
 
 /**
- * Create tool instances for the enabled tool names.
+ * Resolve whitelist entries into tool configs.
  */
-export function createTools(toolNames: string[]): ChannelAgentTool[] {
+function resolveWhitelist(entries: string[]): ResolvedToolConfig[] {
+  const toolOps = new Map<string, Set<string>>();
+  const toolsWithAllOps = new Set<string>();
+
+  for (const entry of entries) {
+    const { tool, operation } = parseToolEntry(entry);
+
+    // Skip invalid tools
+    if (!(tool in TOOL_REGISTRY)) continue;
+
+    if (!operation) {
+      // Entire tool enabled
+      toolsWithAllOps.add(tool);
+    } else {
+      // Specific operation enabled
+      const validOps = TOOL_OPERATIONS[tool];
+      if (validOps?.includes(operation)) {
+        if (!toolOps.has(tool)) {
+          toolOps.set(tool, new Set());
+        }
+        toolOps.get(tool)!.add(operation);
+      }
+    }
+  }
+
+  const result: ResolvedToolConfig[] = [];
+
+  // Add tools with all operations enabled
+  for (const tool of toolsWithAllOps) {
+    result.push({ tool });
+    toolOps.delete(tool); // Remove from specific ops map
+  }
+
+  // Add tools with specific operations
+  for (const [tool, ops] of toolOps) {
+    if (!toolsWithAllOps.has(tool)) {
+      result.push({ tool, enabledOperations: Array.from(ops) });
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Apply blacklist to resolved tool configs.
+ */
+function applyBlacklist(
+  configs: ResolvedToolConfig[],
+  blacklist: string[]
+): ResolvedToolConfig[] {
+  const disabledTools = new Set<string>();
+  const disabledOps = new Map<string, Set<string>>();
+
+  for (const entry of blacklist) {
+    const { tool, operation } = parseToolEntry(entry);
+
+    if (!operation) {
+      // Entire tool disabled
+      disabledTools.add(tool);
+    } else {
+      // Specific operation disabled
+      if (!disabledOps.has(tool)) {
+        disabledOps.set(tool, new Set());
+      }
+      disabledOps.get(tool)!.add(operation);
+    }
+  }
+
+  const result: ResolvedToolConfig[] = [];
+
+  for (const config of configs) {
+    // Skip entirely disabled tools
+    if (disabledTools.has(config.tool)) continue;
+
+    const toolDisabledOps = disabledOps.get(config.tool);
+    if (!toolDisabledOps || toolDisabledOps.size === 0) {
+      // No operations disabled for this tool
+      result.push(config);
+    } else {
+      // Filter out disabled operations
+      const allOps = TOOL_OPERATIONS[config.tool] ?? [];
+      const currentOps = config.enabledOperations ?? [...allOps];
+      const filteredOps = currentOps.filter((op) => !toolDisabledOps.has(op));
+
+      if (filteredOps.length > 0) {
+        result.push({ tool: config.tool, enabledOperations: filteredOps });
+      }
+      // If no operations left, don't include the tool
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Create tool instances for the resolved tool configs.
+ */
+export function createTools(configs: ResolvedToolConfig[]): ChannelAgentTool[] {
   const tools: ChannelAgentTool[] = [];
-  for (const name of toolNames) {
-    const factory = TOOL_REGISTRY[name];
+  for (const config of configs) {
+    const factory = TOOL_REGISTRY[config.tool];
     if (factory) {
-      tools.push(factory());
+      tools.push(factory(config.enabledOperations));
     }
   }
   return tools;
@@ -145,6 +284,6 @@ export function resolveAccountTools(params: {
   puppet: string;
   toolsConfig?: WechatyToolsConfig;
 }): ChannelAgentTool[] {
-  const enabledToolNames = resolveEnabledTools(params);
-  return createTools(enabledToolNames);
+  const resolvedConfigs = resolveEnabledTools(params);
+  return createTools(resolvedConfigs);
 }

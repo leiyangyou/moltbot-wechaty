@@ -32,12 +32,27 @@ export type CoreConfig = {
 
 /**
  * Configuration for agent tools.
- * Allows whitelist/blacklist control of which tools are exposed.
+ * Allows whitelist/blacklist control of which tools and operations are exposed.
+ *
+ * Supports two formats:
+ * - Tool-level: "wechaty_message" - enables/disables entire tool
+ * - Operation-level: "wechaty_message.history" - enables/disables specific operation
+ *
+ * Examples:
+ * ```yaml
+ * tools:
+ *   enable:
+ *     - wechaty_message.forward      # Only forward operation
+ *     - wechaty_contact              # All contact operations
+ *   disable:
+ *     - wechaty_message.history      # Disable history (saves tokens)
+ *     - wechaty_room.create          # Disable room creation
+ * ```
  */
 export type WechatyToolsConfig = {
-  /** Whitelist: only enable these tools (takes precedence over blacklist) */
+  /** Whitelist: only enable these tools/operations (takes precedence over blacklist) */
   enable?: string[];
-  /** Blacklist: disable these tools (ignored if enable is set) */
+  /** Blacklist: disable these tools/operations (ignored if enable is set) */
   disable?: string[];
 };
 

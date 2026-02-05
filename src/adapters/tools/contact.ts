@@ -1,4 +1,4 @@
-import { Type } from "@sinclair/typebox";
+import { Type, type TLiteral, type TUnion } from "@sinclair/typebox";
 import type { ChannelAgentTool } from "openclaw/plugin-sdk";
 import { getActiveWechatyBot } from "../../wechaty/operations/send.js";
 import {
@@ -8,14 +8,9 @@ import {
   searchContactsByQueryWechaty,
 } from "../../wechaty/operations/contact.js";
 
-type ContactOperation =
-  | "get"
-  | "search"
-  | "list_tags"
-  | "add_tag"
-  | "remove_tag"
-  | "delete_tag"
-  | "set_alias";
+/** All available operations for this tool */
+const ALL_OPERATIONS = ["get", "search", "list_tags", "add_tag", "remove_tag", "delete_tag", "set_alias"] as const;
+type OperationType = (typeof ALL_OPERATIONS)[number];
 
 /**
  * Creates the wechaty_contact agent tool for contact operations.
@@ -28,74 +23,109 @@ type ContactOperation =
  * - remove_tag: Remove a contact from a tag
  * - delete_tag: Delete a tag entirely
  * - set_alias: Set or clear a contact's alias/remark
+ *
+ * @param enabledOperations - Optional list of enabled operations. If undefined, all operations are enabled.
  */
-export function createWechatyContactTool(): ChannelAgentTool {
+export function createWechatyContactTool(enabledOperations?: string[]): ChannelAgentTool {
+  const operations = enabledOperations
+    ? ALL_OPERATIONS.filter((op) => enabledOperations.includes(op))
+    : [...ALL_OPERATIONS];
+
+  if (operations.length === 0) {
+    throw new Error("wechaty_contact tool requires at least one enabled operation");
+  }
+
+  // Build dynamic operation union type
+  const opLiterals = operations.map((op) => Type.Literal(op)) as [TLiteral<string>, ...TLiteral<string>[]];
+  const opUnion: TUnion<[TLiteral<string>, ...TLiteral<string>[]]> = Type.Union(opLiterals, {
+    description: `The operation to perform: ${operations.join(", ")}`,
+  });
+
+  // Build description based on enabled operations
+  const opDescriptions: Record<OperationType, string> = {
+    get: "'get' (retrieve contact by ID)",
+    search: "'search' (find contacts by name/alias, phone, or weixin ID)",
+    list_tags: "'list_tags' (list all tags or tags for a contact)",
+    add_tag: "'add_tag' (add contact to tag)",
+    remove_tag: "'remove_tag' (remove contact from tag)",
+    delete_tag: "'delete_tag' (delete tag entirely)",
+    set_alias: "'set_alias' (set contact alias/remark)",
+  };
+  const descParts = operations.map((op) => opDescriptions[op]);
+  const description =
+    `Manage WeChat contacts. Operations: ${descParts.join(", ")}. ` +
+    "Use contactId (wxid_xxx) for contact operations.";
+
+  // Build parameters object - only include params for enabled operations
+  const params: Record<string, any> = {
+    operation: opUnion,
+    accountId: Type.Optional(
+      Type.String({
+        description: "Account ID if using multi-account setup",
+      })
+    ),
+  };
+
+  // contactId is needed for most operations
+  const needsContactId = operations.some((op) =>
+    ["get", "list_tags", "add_tag", "remove_tag", "set_alias"].includes(op)
+  );
+  if (needsContactId) {
+    params.contactId = Type.Optional(
+      Type.String({
+        description:
+          "Contact ID (wxid_xxx). Required for: get, add_tag, remove_tag, set_alias. " +
+          "Optional for list_tags (omit to list all tags).",
+      })
+    );
+  }
+
+  if (operations.includes("search")) {
+    params.query = Type.Optional(
+      Type.String({
+        description: "Search query for name/alias matching (for 'search' operation)",
+      })
+    );
+    params.phone = Type.Optional(
+      Type.String({
+        description: "Phone number to search for (for 'search' operation)",
+      })
+    );
+    params.weixin = Type.Optional(
+      Type.String({
+        description: "Weixin ID to search for (for 'search' operation)",
+      })
+    );
+  }
+
+  // tagId is needed for tag operations
+  const needsTagId = operations.some((op) => ["add_tag", "remove_tag", "delete_tag"].includes(op));
+  if (needsTagId) {
+    params.tagId = Type.Optional(
+      Type.String({
+        description: "Tag ID or name. Required for: add_tag, remove_tag, delete_tag.",
+      })
+    );
+  }
+
+  if (operations.includes("set_alias")) {
+    params.alias = Type.Optional(
+      Type.String({
+        description:
+          "New alias/remark for the contact. Required for set_alias. " +
+          "Pass empty string to clear the alias.",
+      })
+    );
+  }
+
   return {
     label: "Wechaty Contact",
     name: "wechaty_contact",
-    description:
-      "Manage WeChat contacts. " +
-      "Operations: 'get' (retrieve contact by ID), 'search' (find contacts by name/alias, phone, or weixin ID), " +
-      "list_tags (list all tags or tags for a contact), add_tag (add contact to tag), " +
-      "remove_tag (remove contact from tag), delete_tag (delete tag entirely), " +
-      "set_alias (set contact alias/remark). " +
-      "Use contactId (wxid_xxx) for contact operations.",
-    parameters: Type.Object({
-      operation: Type.Union(
-        [
-          Type.Literal("get"),
-          Type.Literal("search"),
-          Type.Literal("list_tags"),
-          Type.Literal("add_tag"),
-          Type.Literal("remove_tag"),
-          Type.Literal("delete_tag"),
-          Type.Literal("set_alias"),
-        ],
-        { description: "The operation to perform" }
-      ),
-      contactId: Type.Optional(
-        Type.String({
-          description:
-            "Contact ID (wxid_xxx). Required for: get, add_tag, remove_tag, set_alias. " +
-            "Optional for list_tags (omit to list all tags).",
-        })
-      ),
-      query: Type.Optional(
-        Type.String({
-          description: "Search query for name/alias matching (for 'search' operation)",
-        })
-      ),
-      phone: Type.Optional(
-        Type.String({
-          description: "Phone number to search for (for 'search' operation)",
-        })
-      ),
-      weixin: Type.Optional(
-        Type.String({
-          description: "Weixin ID to search for (for 'search' operation)",
-        })
-      ),
-      tagId: Type.Optional(
-        Type.String({
-          description: "Tag ID or name. Required for: add_tag, remove_tag, delete_tag.",
-        })
-      ),
-      alias: Type.Optional(
-        Type.String({
-          description:
-            "New alias/remark for the contact. Required for set_alias. " +
-            "Pass empty string to clear the alias.",
-        })
-      ),
-      accountId: Type.Optional(
-        Type.String({
-          description: "Account ID if using multi-account setup",
-        })
-      ),
-    }),
+    description,
+    parameters: Type.Object(params),
     execute: async (_toolCallId, args) => {
       const { operation, contactId, query, phone, weixin, tagId, alias, accountId } = args as {
-        operation: ContactOperation;
+        operation: OperationType;
         contactId?: string;
         query?: string;
         phone?: string;
@@ -105,6 +135,20 @@ export function createWechatyContactTool(): ChannelAgentTool {
         accountId?: string;
       };
 
+      // Check if operation is enabled
+      if (!operations.includes(operation)) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text",
+              text: `Operation '${operation}' is not enabled. Available operations: ${operations.join(", ")}`,
+            },
+          ],
+        };
+      }
+
+      // Validate bot availability
       const bot = getActiveWechatyBot(accountId);
       if (!bot) {
         return {
@@ -363,10 +407,9 @@ export function createWechatyContactTool(): ChannelAgentTool {
           }
 
           default: {
-            const _exhaustive: never = operation;
             return {
               isError: true,
-              content: [{ type: "text", text: `Unknown operation: ${_exhaustive}` }],
+              content: [{ type: "text", text: `Unknown operation: ${operation}` }],
             };
           }
         }

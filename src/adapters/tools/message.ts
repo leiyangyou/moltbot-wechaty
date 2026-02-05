@@ -1,4 +1,4 @@
-import { Type } from "@sinclair/typebox";
+import { Type, type TLiteral, type TUnion } from "@sinclair/typebox";
 import type { ChannelAgentTool } from "openclaw/plugin-sdk";
 import {
   forwardMessageWechaty,
@@ -22,6 +22,10 @@ const MESSAGE_TYPE_MAP: Record<string, number> = {
   system: 10000,
 };
 
+/** All available actions for this tool */
+const ALL_ACTIONS = ["forward", "send_contact_card", "history"] as const;
+type ActionType = (typeof ALL_ACTIONS)[number];
+
 /**
  * Creates the wechaty_message agent tool for message operations.
  *
@@ -29,76 +33,111 @@ const MESSAGE_TYPE_MAP: Record<string, number> = {
  * - forward: Forward a message by ID to another contact or room (WCF messageForward)
  * - send_contact_card: Send a contact card to a target (WCF messageSendContact)
  * - history: Query chat history from WCF's SQLite database (WCF-only)
+ *
+ * @param enabledOperations - Optional list of enabled operations. If undefined, all operations are enabled.
  */
-export function createWechatyMessageTool(): ChannelAgentTool {
+export function createWechatyMessageTool(enabledOperations?: string[]): ChannelAgentTool {
+  const actions = enabledOperations
+    ? ALL_ACTIONS.filter((a) => enabledOperations.includes(a))
+    : [...ALL_ACTIONS];
+
+  if (actions.length === 0) {
+    throw new Error("wechaty_message tool requires at least one enabled operation");
+  }
+
+  // Build dynamic action union type
+  const actionLiterals = actions.map((a) => Type.Literal(a)) as [TLiteral<string>, ...TLiteral<string>[]];
+  const actionUnion: TUnion<[TLiteral<string>, ...TLiteral<string>[]]> = Type.Union(actionLiterals, {
+    description: `The action to perform: ${actions.map((a) => `'${a}'`).join(", ")}`,
+  });
+
+  // Build description based on enabled actions
+  const actionDescriptions: Record<ActionType, string> = {
+    forward: "forward messages",
+    send_contact_card: "send contact cards",
+    history: "query history",
+  };
+  const descParts = actions.map((a) => actionDescriptions[a]);
+  const description =
+    `Perform message operations: ${descParts.join(", ")}. ` +
+    "Only works with WeChatFerry-based puppets.";
+
+  // Build parameters object - only include params for enabled actions
+  const params: Record<string, any> = {
+    action: actionUnion,
+    accountId: Type.Optional(
+      Type.String({
+        description: "Account ID if using multi-account setup",
+      })
+    ),
+  };
+
+  // Add parameters for forward/send_contact_card
+  if (actions.includes("forward") || actions.includes("send_contact_card")) {
+    params.target = Type.Optional(
+      Type.String({
+        description: "Target contact ID (wxid_xxx) or room ID (xxx@chatroom). Required for forward/send_contact_card.",
+      })
+    );
+  }
+
+  if (actions.includes("forward")) {
+    params.messageId = Type.Optional(
+      Type.String({
+        description:
+          "The message ID to forward (from context.MessageSid). Required for 'forward' action.",
+      })
+    );
+  }
+
+  if (actions.includes("send_contact_card")) {
+    params.contactId = Type.Optional(
+      Type.String({
+        description:
+          "The contact ID (wxid_xxx) to share. Required for 'send_contact_card' action.",
+      })
+    );
+  }
+
+  // Add history parameters
+  if (actions.includes("history")) {
+    params.conversationId = Type.Optional(
+      Type.String({
+        description:
+          "[history] Contact ID (wxid_xxx) or room ID (xxx@chatroom) to query. Required for 'history' action.",
+      })
+    );
+    params.keyword = Type.Optional(
+      Type.String({ description: "[history] Filter messages containing this text" })
+    );
+    params.messageType = Type.Optional(
+      Type.String({
+        description:
+          "[history] Filter by message type: text, image, voice, video, emoji, location, link, file",
+      })
+    );
+    params.startTime = Type.Optional(
+      Type.Number({
+        description: "[history] Start timestamp in seconds (Unix epoch)",
+      })
+    );
+    params.endTime = Type.Optional(
+      Type.Number({
+        description: "[history] End timestamp in seconds (Unix epoch)",
+      })
+    );
+    params.limit = Type.Optional(
+      Type.Number({
+        description: "[history] Maximum number of messages to return (default: 50, max: 200)",
+      })
+    );
+  }
+
   return {
     label: "Wechaty Message",
     name: "wechaty_message",
-    description:
-      "Perform message operations: forward messages, send contact cards, or query history. " +
-      "Only works with WeChatFerry-based puppets.",
-    parameters: Type.Object({
-      action: Type.Union(
-        [Type.Literal("forward"), Type.Literal("send_contact_card"), Type.Literal("history")],
-        {
-          description:
-            "The action to perform: 'forward' to forward a message, 'send_contact_card' to share a contact, 'history' to query chat history",
-        }
-      ),
-      target: Type.Optional(
-        Type.String({
-          description: "Target contact ID (wxid_xxx) or room ID (xxx@chatroom). Required for forward/send_contact_card.",
-        })
-      ),
-      messageId: Type.Optional(
-        Type.String({
-          description:
-            "The message ID to forward (from context.MessageSid). Required for 'forward' action.",
-        })
-      ),
-      contactId: Type.Optional(
-        Type.String({
-          description:
-            "The contact ID (wxid_xxx) to share. Required for 'send_contact_card' action.",
-        })
-      ),
-      // History parameters
-      conversationId: Type.Optional(
-        Type.String({
-          description:
-            "[history] Contact ID (wxid_xxx) or room ID (xxx@chatroom) to query. Required for 'history' action.",
-        })
-      ),
-      keyword: Type.Optional(
-        Type.String({ description: "[history] Filter messages containing this text" })
-      ),
-      messageType: Type.Optional(
-        Type.String({
-          description:
-            "[history] Filter by message type: text, image, voice, video, emoji, location, link, file",
-        })
-      ),
-      startTime: Type.Optional(
-        Type.Number({
-          description: "[history] Start timestamp in seconds (Unix epoch)",
-        })
-      ),
-      endTime: Type.Optional(
-        Type.Number({
-          description: "[history] End timestamp in seconds (Unix epoch)",
-        })
-      ),
-      limit: Type.Optional(
-        Type.Number({
-          description: "[history] Maximum number of messages to return (default: 50, max: 200)",
-        })
-      ),
-      accountId: Type.Optional(
-        Type.String({
-          description: "Account ID if using multi-account setup",
-        })
-      ),
-    }),
+    description,
+    parameters: Type.Object(params),
     execute: async (_toolCallId, args) => {
       const {
         action,
@@ -113,7 +152,7 @@ export function createWechatyMessageTool(): ChannelAgentTool {
         limit,
         accountId,
       } = args as {
-        action: "forward" | "send_contact_card" | "history";
+        action: ActionType;
         target?: string;
         messageId?: string;
         contactId?: string;
@@ -125,6 +164,19 @@ export function createWechatyMessageTool(): ChannelAgentTool {
         limit?: number;
         accountId?: string;
       };
+
+      // Check if action is enabled
+      if (!actions.includes(action)) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text",
+              text: `Action '${action}' is not enabled. Available actions: ${actions.join(", ")}`,
+            },
+          ],
+        };
+      }
 
       if (action === "forward") {
         if (!target?.trim()) {
@@ -242,7 +294,7 @@ export function createWechatyMessageTool(): ChannelAgentTool {
         content: [
           {
             type: "text",
-            text: `Unknown action: ${action}. Supported actions: forward, send_contact_card, history`,
+            text: `Unknown action: ${action}. Supported actions: ${actions.join(", ")}`,
           },
         ],
       };
