@@ -13,7 +13,9 @@ import {
   renameGroupWechaty,
   sendLinkCardWechaty,
   sendMessageWechaty,
+  setGroupIconWechaty,
 } from "./wechaty/send.js";
+import { prepareWechatyMedia } from "./wechaty/media.js";
 import type { CoreConfig } from "./types.js";
 
 const providerId = "wechaty";
@@ -29,7 +31,7 @@ function hasEnabledAccount(cfg: OpenClawConfig): boolean {
 export const wechatyMessageActions: ChannelMessageActionAdapter = {
   listActions: ({ cfg }) => {
     if (!hasEnabledAccount(cfg)) return [];
-    const actions = new Set<ChannelMessageActionName>(["sticker", "unsend", "removeParticipant", "renameGroup"]);
+    const actions = new Set<ChannelMessageActionName>(["sticker", "unsend", "removeParticipant", "renameGroup", "setGroupIcon"]);
     return Array.from(actions);
   },
 
@@ -284,6 +286,86 @@ export const wechatyMessageActions: ChannelMessageActionAdapter = {
         return jsonResult({
           ok: false,
           error: error instanceof Error ? error.message : "Failed to rename group",
+        });
+      }
+    }
+
+    // Handle setGroupIcon action for setting group avatar
+    if (action === "setGroupIcon") {
+      const roomId =
+        typeof params.roomId === "string"
+          ? params.roomId.trim()
+          : typeof params.to === "string"
+            ? params.to.trim()
+            : typeof params.target === "string"
+              ? params.target.trim()
+              : "";
+
+      if (!roomId) {
+        return {
+          isError: true,
+          content: [{ type: "text", text: "setGroupIcon action requires a roomId, to, or target." }],
+        };
+      }
+
+      // Accept various parameter names for the image
+      const imageUrl =
+        typeof params.imageUrl === "string"
+          ? params.imageUrl.trim()
+          : typeof params.url === "string"
+            ? params.url.trim()
+            : typeof params.mediaUrl === "string"
+              ? params.mediaUrl.trim()
+              : "";
+
+      const imageBuffer =
+        params.imageBuffer instanceof Buffer
+          ? params.imageBuffer
+          : params.buffer instanceof Buffer
+            ? params.buffer
+            : params.mediaBuffer instanceof Buffer
+              ? params.mediaBuffer
+              : undefined;
+
+      if (!imageUrl && !imageBuffer) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text",
+              text: "setGroupIcon action requires an image. Provide imageUrl, url, mediaUrl, or imageBuffer/buffer.",
+            },
+          ],
+        };
+      }
+
+      try {
+        const mediaResult = await prepareWechatyMedia({
+          mediaUrl: imageUrl || undefined,
+          mediaBuffer: imageBuffer,
+          fileName: typeof params.fileName === "string" ? params.fileName : undefined,
+        });
+
+        if (!mediaResult) {
+          return {
+            isError: true,
+            content: [{ type: "text", text: "Failed to prepare image for group icon." }],
+          };
+        }
+
+        await setGroupIconWechaty(roomId, mediaResult.fileBox, {
+          accountId: accountId ?? undefined,
+        });
+
+        return jsonResult({
+          ok: true,
+          roomId,
+          iconSet: true,
+        });
+      } catch (error) {
+        return jsonResult({
+          ok: false,
+          error: error instanceof Error ? error.message : "Failed to set group icon",
         });
       }
     }

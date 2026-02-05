@@ -399,3 +399,37 @@ export async function removeRoomMemberWechaty(
     );
   }
 }
+
+/**
+ * Set a group chat's avatar/icon via Wechaty puppet's roomAvatar API.
+ * Requires group admin permissions on most platforms.
+ *
+ * @param roomId - Target room ID
+ * @param fileBox - FileBox containing the avatar image
+ * @param opts - Optional account/bot configuration
+ */
+export async function setGroupIconWechaty(
+  roomId: string,
+  fileBox: any,
+  opts?: { accountId?: string; bot?: Wechaty }
+): Promise<void> {
+  const bot = opts?.bot ?? getActiveWechatyBot(opts?.accountId);
+
+  if (!bot) {
+    throw new Error(
+      `Wechaty bot not initialized${opts?.accountId ? ` for account: ${opts.accountId}` : ""}`
+    );
+  }
+
+  const trimmedRoomId = roomId.replace(/^wechaty:/i, "").trim();
+  if (!trimmedRoomId) {
+    throw new Error("Wechaty setGroupIcon requires roomId");
+  }
+
+  try {
+    await bot.puppet.roomAvatar(trimmedRoomId, fileBox);
+  } catch (error) {
+    console.error(`Failed to set group icon for ${trimmedRoomId}: ${String(error)}`);
+    throw error;
+  }
+}
