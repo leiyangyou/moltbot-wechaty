@@ -284,6 +284,35 @@ export async function recallMessageWechaty(
 }
 
 /**
+ * Add a contact to a room (group chat).
+ * Uses puppet.roomAdd() which may trigger an invite for certain group settings.
+ *
+ * @param roomId - The room/group ID to add the contact to
+ * @param contactId - The contact ID to add
+ * @param opts - Optional account/bot configuration
+ */
+export async function addParticipantWechaty(
+  roomId: string,
+  contactId: string,
+  opts?: { accountId?: string; bot?: Wechaty }
+): Promise<void> {
+  const bot = opts?.bot ?? getActiveWechatyBot(opts?.accountId);
+
+  if (!bot) {
+    throw new Error(
+      `Wechaty bot not initialized${opts?.accountId ? ` for account: ${opts.accountId}` : ""}`
+    );
+  }
+
+  try {
+    await bot.puppet.roomAdd(roomId, contactId);
+  } catch (error) {
+    console.error(`Failed to add ${contactId} to room ${roomId}: ${String(error)}`);
+    throw error;
+  }
+}
+
+/**
  * Rename a room/group chat topic.
  * Requires group admin permissions.
  *

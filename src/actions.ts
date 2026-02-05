@@ -8,6 +8,7 @@ import { jsonResult, readStringParam } from "openclaw/plugin-sdk";
 
 import { listWechatyAccountIds, resolveWechatyAccount } from "./wechaty/accounts.js";
 import {
+  addParticipantWechaty,
   recallMessageWechaty,
   removeRoomMemberWechaty,
   renameGroupWechaty,
@@ -31,7 +32,7 @@ function hasEnabledAccount(cfg: OpenClawConfig): boolean {
 export const wechatyMessageActions: ChannelMessageActionAdapter = {
   listActions: ({ cfg }) => {
     if (!hasEnabledAccount(cfg)) return [];
-    const actions = new Set<ChannelMessageActionName>(["sticker", "unsend", "removeParticipant", "renameGroup", "setGroupIcon"]);
+    const actions = new Set<ChannelMessageActionName>(["sticker", "unsend", "addParticipant", "removeParticipant", "renameGroup", "setGroupIcon"]);
     return Array.from(actions);
   },
 
@@ -197,6 +198,49 @@ export const wechatyMessageActions: ChannelMessageActionAdapter = {
         return jsonResult({
           ok: false,
           error: error instanceof Error ? error.message : "Failed to unsend Wechaty message",
+        });
+      }
+    }
+
+    // Handle addParticipant action for adding members to group chats
+    // Uses standard OpenClaw schema: to/target = room, participant = contact to add
+    if (action === "addParticipant") {
+      const roomId =
+        readStringParam(params, "to") ??
+        readStringParam(params, "target") ??
+        readStringParam(params, "roomId"); // fallback for backwards compat
+      const participant =
+        readStringParam(params, "participant") ??
+        readStringParam(params, "contactId"); // fallback for backwards compat
+
+      if (!roomId) {
+        return jsonResult({
+          ok: false,
+          error: "addParticipant requires 'to' or 'target' parameter (room ID)",
+        });
+      }
+
+      if (!participant) {
+        return jsonResult({
+          ok: false,
+          error: "addParticipant requires 'participant' parameter (contact ID to add)",
+        });
+      }
+
+      try {
+        await addParticipantWechaty(roomId, participant, {
+          accountId: accountId ?? undefined,
+        });
+
+        return jsonResult({
+          ok: true,
+          roomId,
+          participant,
+        });
+      } catch (error) {
+        return jsonResult({
+          ok: false,
+          error: error instanceof Error ? error.message : "Failed to add participant to room",
         });
       }
     }
