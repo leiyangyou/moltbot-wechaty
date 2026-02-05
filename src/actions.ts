@@ -10,6 +10,7 @@ import { listWechatyAccountIds, resolveWechatyAccount } from "./wechaty/accounts
 import {
   recallMessageWechaty,
   removeRoomMemberWechaty,
+  renameGroupWechaty,
   sendLinkCardWechaty,
   sendMessageWechaty,
 } from "./wechaty/send.js";
@@ -28,7 +29,7 @@ function hasEnabledAccount(cfg: OpenClawConfig): boolean {
 export const wechatyMessageActions: ChannelMessageActionAdapter = {
   listActions: ({ cfg }) => {
     if (!hasEnabledAccount(cfg)) return [];
-    const actions = new Set<ChannelMessageActionName>(["sticker", "unsend", "removeParticipant"]);
+    const actions = new Set<ChannelMessageActionName>(["sticker", "unsend", "removeParticipant", "renameGroup"]);
     return Array.from(actions);
   },
 
@@ -239,6 +240,50 @@ export const wechatyMessageActions: ChannelMessageActionAdapter = {
         return jsonResult({
           ok: false,
           error: error instanceof Error ? error.message : "Failed to remove participant from room",
+        });
+      }
+    }
+
+    // Handle renameGroup action for renaming group chat topic
+    // Standard schema: to/chatGuid/chatIdentifier/chatId for room, name for new topic
+    if (action === "renameGroup") {
+      const roomId =
+        readStringParam(params, "to") ??
+        readStringParam(params, "chatGuid") ??
+        readStringParam(params, "chatIdentifier") ??
+        readStringParam(params, "chatId");
+
+      const name = readStringParam(params, "name");
+
+      if (!roomId) {
+        return jsonResult({
+          ok: false,
+          error:
+            "renameGroup action requires a target room (to, chatGuid, chatIdentifier, or chatId)",
+        });
+      }
+
+      if (!name) {
+        return jsonResult({
+          ok: false,
+          error: "renameGroup action requires a name parameter",
+        });
+      }
+
+      try {
+        await renameGroupWechaty(roomId, name, {
+          accountId: accountId ?? undefined,
+        });
+
+        return jsonResult({
+          ok: true,
+          chatId: roomId,
+          name,
+        });
+      } catch (error) {
+        return jsonResult({
+          ok: false,
+          error: error instanceof Error ? error.message : "Failed to rename group",
         });
       }
     }

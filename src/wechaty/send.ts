@@ -284,6 +284,55 @@ export async function recallMessageWechaty(
 }
 
 /**
+ * Rename a room/group chat topic.
+ * Requires group admin permissions.
+ *
+ * @param roomId - The room/group ID
+ * @param newTopic - The new topic/name for the group
+ * @param opts - Optional account/bot configuration
+ */
+export async function renameGroupWechaty(
+  roomId: string,
+  newTopic: string,
+  opts?: { accountId?: string; bot?: Wechaty }
+): Promise<void> {
+  const bot = opts?.bot ?? getActiveWechatyBot(opts?.accountId);
+
+  if (!bot) {
+    throw new Error(
+      `Wechaty bot not initialized${opts?.accountId ? ` for account: ${opts.accountId}` : ""}`
+    );
+  }
+
+  // Normalize room ID
+  const normalizedRoomId = roomId.replace(/^wechaty:/i, "").trim();
+
+  // Find the room
+  let room: Room | undefined;
+  try {
+    room = await bot.Room.find({ id: normalizedRoomId });
+    if (!room) {
+      room = await bot.Room.find({ topic: normalizedRoomId });
+    }
+  } catch (error) {
+    throw new Error(`Failed to find room: ${normalizedRoomId} - ${String(error)}`);
+  }
+
+  if (!room) {
+    throw new Error(`Room not found: ${normalizedRoomId}`);
+  }
+
+  // Rename the room using puppet.roomTopic
+  try {
+    await bot.puppet.roomTopic(room.id, newTopic);
+  } catch (error) {
+    throw new Error(
+      `Failed to rename room: ${String(error)}. Ensure the bot has admin permissions.`
+    );
+  }
+}
+
+/**
  * Remove a member from a room/group chat.
  * Requires group admin permissions.
  *
