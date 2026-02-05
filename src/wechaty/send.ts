@@ -313,6 +313,34 @@ export async function addParticipantWechaty(
 }
 
 /**
+ * Leave a group chat via Wechaty puppet's roomQuit API.
+ *
+ * @param roomId - The room/group ID to leave
+ * @param opts - Optional account/bot configuration
+ */
+export async function leaveGroupWechaty(
+  roomId: string,
+  opts?: { accountId?: string; bot?: Wechaty }
+): Promise<void> {
+  const bot = opts?.bot ?? getActiveWechatyBot(opts?.accountId);
+
+  if (!bot) {
+    throw new Error(
+      `Wechaty bot not initialized${opts?.accountId ? ` for account: ${opts.accountId}` : ""}`
+    );
+  }
+
+  const normalizedRoomId = roomId.replace(/^wechaty:/i, "").trim();
+
+  try {
+    await bot.puppet.roomQuit(normalizedRoomId);
+  } catch (error) {
+    console.error(`Failed to leave group ${normalizedRoomId}: ${String(error)}`);
+    throw error;
+  }
+}
+
+/**
  * Rename a room/group chat topic.
  * Requires group admin permissions.
  *

@@ -9,6 +9,7 @@ import { jsonResult, readStringParam } from "openclaw/plugin-sdk";
 import { listWechatyAccountIds, resolveWechatyAccount } from "./wechaty/accounts.js";
 import {
   addParticipantWechaty,
+  leaveGroupWechaty,
   recallMessageWechaty,
   removeRoomMemberWechaty,
   renameGroupWechaty,
@@ -32,7 +33,7 @@ function hasEnabledAccount(cfg: OpenClawConfig): boolean {
 export const wechatyMessageActions: ChannelMessageActionAdapter = {
   listActions: ({ cfg }) => {
     if (!hasEnabledAccount(cfg)) return [];
-    const actions = new Set<ChannelMessageActionName>(["sticker", "unsend", "addParticipant", "removeParticipant", "renameGroup", "setGroupIcon"]);
+    const actions = new Set<ChannelMessageActionName>(["sticker", "unsend", "addParticipant", "leaveGroup", "removeParticipant", "renameGroup", "setGroupIcon"]);
     return Array.from(actions);
   },
 
@@ -241,6 +242,39 @@ export const wechatyMessageActions: ChannelMessageActionAdapter = {
         return jsonResult({
           ok: false,
           error: error instanceof Error ? error.message : "Failed to add participant to room",
+        });
+      }
+    }
+
+    // Handle leaveGroup action
+    if (action === "leaveGroup") {
+      // Standard schema uses `to` with aliases chatGuid/chatIdentifier/chatId
+      const roomId =
+        readStringParam(params, "to") ??
+        readStringParam(params, "chatId") ??
+        readStringParam(params, "chatGuid") ??
+        readStringParam(params, "chatIdentifier");
+
+      if (!roomId) {
+        return jsonResult({
+          ok: false,
+          error: "leaveGroup action requires a target (to, chatId, chatGuid, or chatIdentifier)",
+        });
+      }
+
+      try {
+        await leaveGroupWechaty(roomId, {
+          accountId: accountId ?? undefined,
+        });
+
+        return jsonResult({
+          ok: true,
+          left: roomId,
+        });
+      } catch (error) {
+        return jsonResult({
+          ok: false,
+          error: error instanceof Error ? error.message : "Failed to leave group",
         });
       }
     }
