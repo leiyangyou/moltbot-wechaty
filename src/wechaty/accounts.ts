@@ -95,6 +95,8 @@ export function resolveWechatyAccount(params: {
     autoAcceptFriend:
       accountConfig?.autoAcceptFriend ?? wechatyConfig.autoAcceptFriend ?? false,
     qrcodeNotify: accountConfig?.qrcodeNotify ?? wechatyConfig.qrcodeNotify,
+    // Merge tools config: account-level overrides top-level
+    tools: accountConfig?.tools ?? wechatyConfig.tools,
   };
 
   const puppet = mergedConfig.puppet || "";

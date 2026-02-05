@@ -30,6 +30,17 @@ export type CoreConfig = {
   [key: string]: unknown;
 };
 
+/**
+ * Configuration for agent tools.
+ * Allows whitelist/blacklist control of which tools are exposed.
+ */
+export type WechatyToolsConfig = {
+  /** Whitelist: only enable these tools (takes precedence over blacklist) */
+  enable?: string[];
+  /** Blacklist: disable these tools (ignored if enable is set) */
+  disable?: string[];
+};
+
 export type WechatyChannelConfig = {
   enabled?: boolean;
   name?: string;
@@ -47,6 +58,7 @@ export type WechatyChannelConfig = {
   autoAcceptFriend?: boolean;
   replyToMode?: "off" | "all" | "direct";
   qrcodeNotify?: QrcodeNotifyConfig;
+  tools?: WechatyToolsConfig;
   accounts?: Record<string, WechatyAccountConfig>;
 };
 
@@ -66,6 +78,7 @@ export type WechatyAccountConfig = {
   groupRequireMention?: boolean;
   autoAcceptFriend?: boolean;
   qrcodeNotify?: QrcodeNotifyConfig;
+  tools?: WechatyToolsConfig;
 };
 
 export type WechatyMessageType =

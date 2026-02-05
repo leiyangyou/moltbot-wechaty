@@ -41,6 +41,19 @@ const qrcodeNotifySchema = z
   })
   .optional();
 
+/**
+ * Schema for tools configuration.
+ * Allows whitelist/blacklist control of which agent tools are exposed.
+ */
+const toolsSchema = z
+  .object({
+    /** Whitelist: only enable these tools (takes precedence over blacklist) */
+    enable: z.array(z.string()).optional(),
+    /** Blacklist: disable these tools (ignored if enable is set) */
+    disable: z.array(z.string()).optional(),
+  })
+  .optional();
+
 const accountSchema = z.object({
   enabled: z.boolean().optional(),
   name: z.string().optional(),
@@ -53,6 +66,7 @@ const accountSchema = z.object({
   groupRequireMention: z.boolean().optional(),
   autoAcceptFriend: z.boolean().optional(),
   qrcodeNotify: qrcodeNotifySchema,
+  tools: toolsSchema,
 });
 
 export const WechatyConfigSchema = z.object({
@@ -69,5 +83,6 @@ export const WechatyConfigSchema = z.object({
   replyToMode: z.enum(["off", "all", "direct"]).optional(),
   mediaMaxMb: z.number().positive().optional(),
   qrcodeNotify: qrcodeNotifySchema,
+  tools: toolsSchema,
   accounts: z.record(z.string(), accountSchema).optional(),
 });
