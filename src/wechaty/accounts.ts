@@ -94,6 +94,7 @@ export function resolveWechatyAccount(params: {
       accountConfig?.groupRequireMention ?? wechatyConfig.groupRequireMention ?? true,
     autoAcceptFriend:
       accountConfig?.autoAcceptFriend ?? wechatyConfig.autoAcceptFriend ?? false,
+    qrcodeNotify: accountConfig?.qrcodeNotify ?? wechatyConfig.qrcodeNotify,
   };
 
   const puppet = mergedConfig.puppet || "";

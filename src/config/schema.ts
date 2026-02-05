@@ -26,6 +26,21 @@ const dmSchema = z
   })
   .optional();
 
+/**
+ * Schema for QR code notification configuration.
+ * When the bot needs login (QR code scan), send notification to another channel.
+ */
+const qrcodeNotifySchema = z
+  .object({
+    /** Target channel to send QR code notification (e.g., "telegram", "discord", "slack") */
+    channel: z.string(),
+    /** Target address in the notification channel (e.g., "telegram:123456") */
+    to: z.string(),
+    /** Whether to send the QR code as an image (default: false, sends URL only) */
+    sendImage: z.boolean().optional(),
+  })
+  .optional();
+
 const accountSchema = z.object({
   enabled: z.boolean().optional(),
   name: z.string().optional(),
@@ -37,6 +52,7 @@ const accountSchema = z.object({
   groupAllowFrom: z.array(allowFromEntry).optional(),
   groupRequireMention: z.boolean().optional(),
   autoAcceptFriend: z.boolean().optional(),
+  qrcodeNotify: qrcodeNotifySchema,
 });
 
 export const WechatyConfigSchema = z.object({
@@ -52,5 +68,6 @@ export const WechatyConfigSchema = z.object({
   autoAcceptFriend: z.boolean().optional(),
   replyToMode: z.enum(["off", "all", "direct"]).optional(),
   mediaMaxMb: z.number().positive().optional(),
+  qrcodeNotify: qrcodeNotifySchema,
   accounts: z.record(z.string(), accountSchema).optional(),
 });

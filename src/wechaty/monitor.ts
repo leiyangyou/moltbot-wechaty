@@ -517,6 +517,35 @@ export async function monitorWechatyProvider(opts: MonitorWechatyOpts): Promise<
       puppetOptions: account.puppetOptions,
       runtime: { log, error: logError },
 
+      onScan: async (qrcode, status) => {
+        const qrcodeUrl = `https://wechaty.js.org/qrcode/${encodeURIComponent(qrcode)}`;
+        log(`Wechaty QR code ready (status: ${status}): ${qrcodeUrl}`);
+
+        // Send cross-channel notification if configured
+        const qrcodeNotify = account.config.qrcodeNotify;
+        if (qrcodeNotify?.channel && qrcodeNotify?.to) {
+          try {
+            const core = getWechatyRuntime();
+            const message = [
+              `🔐 Wechaty login required`,
+              `Account: ${account.accountId}`,
+              `Puppet: ${account.puppet}`,
+              "",
+              `Scan QR code: ${qrcodeUrl}`,
+            ].join("\n");
+
+            await core.channel.outbound.sendText({
+              channel: qrcodeNotify.channel,
+              to: qrcodeNotify.to,
+              text: message,
+            });
+            log(`Wechaty: QR code notification sent to ${qrcodeNotify.channel}:${qrcodeNotify.to}`);
+          } catch (err) {
+            logError(`Wechaty: QR code notification failed: ${String(err)}`);
+          }
+        }
+      },
+
       onLogin: async (user) => {
         currentUser = user;
         setActiveWechatyBot(account.accountId, bot!);
