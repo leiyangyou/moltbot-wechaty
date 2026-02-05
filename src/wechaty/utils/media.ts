@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 import type { OpenClawConfig } from "openclaw/plugin-sdk";
-import { getWechatyRuntime } from "../runtime.js";
+import { getWechatyRuntime } from "../../runtime.js";
 
 export type WechatyMediaInfo = {
   path: string;

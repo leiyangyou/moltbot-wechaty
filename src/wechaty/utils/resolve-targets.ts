@@ -8,7 +8,7 @@ import type {
 import {
   listWechatyDirectoryGroupsLive,
   listWechatyDirectoryPeersLive,
-} from "./directory-live.js";
+} from "../../adapters/directory.js";
 
 function pickBestMatch(
   matches: ChannelDirectoryEntry[],

@@ -7,13 +7,13 @@ import type {
 } from "openclaw/plugin-sdk";
 import { DEFAULT_ACCOUNT_ID, formatDocsLink, promptAccountId } from "openclaw/plugin-sdk";
 
-import type { CoreConfig } from "./types.js";
+import type { CoreConfig } from "../types.js";
 import {
   isWechatyAccountConfigured,
   listWechatyAccountIds,
   resolveDefaultWechatyAccountId,
   resolveWechatyAccount,
-} from "./wechaty/accounts.js";
+} from "../wechaty/accounts.js";
 
 const channel = "wechaty" as const;
 

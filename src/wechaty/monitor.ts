@@ -6,12 +6,12 @@ import {
   type AllowlistMatch,
 } from "openclaw/plugin-sdk";
 import { createWechatyBot, startWechatyBot, stopWechatyBot } from "./bot.js";
-import { setActiveWechatyBot, clearActiveWechatyBot } from "./send.js";
+import { setActiveWechatyBot, clearActiveWechatyBot } from "./registry.js";
 import { resolveWechatyAccount, type ResolvedWechatyAccount } from "./accounts.js";
 import type { CoreConfig, MentionedUser, WechatyMessageContext, WechatyMessageType } from "../types.js";
 import { getWechatyRuntime } from "../runtime.js";
-import { sendMessageWechaty } from "./send.js";
-import { resolveWechatyMediaList, buildWechatyMediaPayload } from "./media.js";
+import { sendMessageWechaty } from "./operations/send.js";
+import { resolveWechatyMediaList, buildWechatyMediaPayload } from "./utils/media.js";
 
 export type MonitorWechatyOpts = {
   config?: CoreConfig;

@@ -1,7 +1,7 @@
 import type { ChannelOutboundAdapter } from "openclaw/plugin-sdk";
 
-import { getWechatyRuntime } from "./runtime.js";
-import { sendMessageWechaty } from "./wechaty/send.js";
+import { getWechatyRuntime } from "../runtime.js";
+import { sendMessageWechaty } from "../wechaty/operations/send.js";
 
 export const wechatyOutbound: ChannelOutboundAdapter = {
   deliveryMode: "direct",

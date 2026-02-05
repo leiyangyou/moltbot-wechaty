@@ -1,6 +1,6 @@
 import { Type } from "@sinclair/typebox";
 import type { ChannelAgentTool } from "openclaw/plugin-sdk";
-import { getActiveWechatyBot } from "../wechaty/send.js";
+import { getActiveWechatyBot } from "../../wechaty/operations/send.js";
 
 /**
  * Creates the wechaty_forward agent tool for forwarding messages.

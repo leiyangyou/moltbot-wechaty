@@ -1,8 +1,8 @@
 import type { ChannelDirectoryEntry } from "openclaw/plugin-sdk";
 
-import { getActiveWechatyBot } from "./wechaty/send.js";
-import { resolveDefaultWechatyAccountId } from "./wechaty/accounts.js";
-import type { CoreConfig } from "./types.js";
+import { getActiveWechatyBot } from "../wechaty/operations/send.js";
+import { resolveDefaultWechatyAccountId } from "../wechaty/accounts.js";
+import type { CoreConfig } from "../types.js";
 
 function normalizeQuery(value?: string | null): string {
   return value?.trim().toLowerCase() ?? "";

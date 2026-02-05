@@ -1,6 +1,6 @@
 import type { ChannelGroupContext, GroupToolPolicyConfig } from "openclaw/plugin-sdk";
 
-import type { CoreConfig } from "./types.js";
+import type { CoreConfig } from "../../types.js";
 
 export function resolveWechatyGroupRequireMention(params: ChannelGroupContext): boolean {
   const cfg = params.cfg as CoreConfig;

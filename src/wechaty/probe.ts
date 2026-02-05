@@ -1,6 +1,6 @@
 import type { ResolvedWechatyAccount } from "./accounts.js";
 import type { CoreConfig } from "../types.js";
-import { getActiveWechatyBot } from "./send.js";
+import { getActiveWechatyBot } from "./registry.js";
 
 export type WechatyProbeResult = {
   ok: boolean;

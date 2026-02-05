@@ -14,9 +14,9 @@ import {
   type ChannelStatusIssue,
 } from "openclaw/plugin-sdk";
 
-import { wechatyMessageActions } from "./actions.js";
-import { WechatyConfigSchema } from "./config-schema.js";
-import { resolveWechatyGroupRequireMention, resolveWechatyGroupToolPolicy } from "./group-mentions.js";
+import { wechatyMessageActions } from "./adapters/actions/index.js";
+import { WechatyConfigSchema } from "./config/schema.js";
+import { resolveWechatyGroupRequireMention, resolveWechatyGroupToolPolicy } from "./wechaty/utils/group-mentions.js";
 import type { CoreConfig } from "./types.js";
 import {
   listWechatyAccountIds,
@@ -25,16 +25,16 @@ import {
   type ResolvedWechatyAccount,
 } from "./wechaty/accounts.js";
 import { probeWechaty } from "./wechaty/probe.js";
-import { sendMessageWechaty } from "./wechaty/send.js";
+import { sendMessageWechaty } from "./wechaty/operations/send.js";
 import { monitorWechatyProvider } from "./wechaty/monitor.js";
-import { wechatyOnboardingAdapter } from "./onboarding.js";
-import { wechatyOutbound } from "./outbound.js";
-import { resolveWechatyTargets } from "./resolve-targets.js";
+import { wechatyOnboardingAdapter } from "./adapters/onboarding.js";
+import { wechatyOutbound } from "./adapters/outbound.js";
+import { resolveWechatyTargets } from "./wechaty/utils/resolve-targets.js";
 import {
   listWechatyDirectoryGroupsLive,
   listWechatyDirectoryPeersLive,
-} from "./directory-live.js";
-import { createWechatyForwardTool } from "./agent-tools/index.js";
+} from "./adapters/directory.js";
+import { createWechatyForwardTool } from "./adapters/tools/index.js";
 
 const meta = {
   id: "wechaty",
