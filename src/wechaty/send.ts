@@ -287,13 +287,13 @@ export async function recallMessageWechaty(
  * Remove a member from a room/group chat.
  * Requires group admin permissions.
  *
- * @param roomId - The room/group ID
- * @param contactId - The contact ID to remove
+ * @param to - The room/group ID (target)
+ * @param participant - The contact ID/address to remove
  * @param opts - Optional account/bot configuration
  */
 export async function removeRoomMemberWechaty(
-  roomId: string,
-  contactId: string,
+  to: string,
+  participant: string,
   opts?: { accountId?: string; bot?: Wechaty }
 ): Promise<void> {
   const bot = opts?.bot ?? getActiveWechatyBot(opts?.accountId);
@@ -304,41 +304,41 @@ export async function removeRoomMemberWechaty(
     );
   }
 
-  // Normalize room ID
-  const normalizedRoomId = roomId.replace(/^wechaty:/i, "").trim();
+  // Normalize target room ID
+  const normalizedTo = to.replace(/^wechaty:/i, "").trim();
 
   // Find the room
   let room: Room | undefined;
   try {
-    room = await bot.Room.find({ id: normalizedRoomId });
+    room = await bot.Room.find({ id: normalizedTo });
     if (!room) {
-      room = await bot.Room.find({ topic: normalizedRoomId });
+      room = await bot.Room.find({ topic: normalizedTo });
     }
   } catch (error) {
-    throw new Error(`Failed to find room: ${normalizedRoomId} - ${String(error)}`);
+    throw new Error(`Failed to find room: ${normalizedTo} - ${String(error)}`);
   }
 
   if (!room) {
-    throw new Error(`Room not found: ${normalizedRoomId}`);
+    throw new Error(`Room not found: ${normalizedTo}`);
   }
 
-  // Find the contact to remove
-  const normalizedContactId = contactId.replace(/^wechaty:/i, "").trim();
+  // Find the participant to remove
+  const normalizedParticipant = participant.replace(/^wechaty:/i, "").trim();
   let contact: Contact | undefined;
   try {
-    contact = await bot.Contact.find({ id: normalizedContactId });
+    contact = await bot.Contact.find({ id: normalizedParticipant });
     if (!contact) {
-      contact = await bot.Contact.find({ name: normalizedContactId });
+      contact = await bot.Contact.find({ name: normalizedParticipant });
     }
     if (!contact) {
-      contact = await bot.Contact.find({ alias: normalizedContactId });
+      contact = await bot.Contact.find({ alias: normalizedParticipant });
     }
   } catch (error) {
-    throw new Error(`Failed to find contact: ${normalizedContactId} - ${String(error)}`);
+    throw new Error(`Failed to find contact: ${normalizedParticipant} - ${String(error)}`);
   }
 
   if (!contact) {
-    throw new Error(`Contact not found: ${normalizedContactId}`);
+    throw new Error(`Contact not found: ${normalizedParticipant}`);
   }
 
   // Remove the member using puppet.roomDel
