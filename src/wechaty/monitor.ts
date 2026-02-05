@@ -480,6 +480,141 @@ async function deliverWechatyReply(params: {
   }
 }
 
+/**
+ * Handle incoming friendship request by routing to agent
+ */
+async function handleFriendshipRequest(params: {
+  friendship: Friendship;
+  contact: Contact;
+  hello: string;
+  account: ResolvedWechatyAccount;
+  config: CoreConfig;
+  runtime: { log?: (message: string) => void; error?: (message: string) => void };
+  statusSink?: (patch: { lastInboundAt?: number; lastOutboundAt?: number }) => void;
+}): Promise<void> {
+  const { friendship, contact, hello, account, config, runtime, statusSink } = params;
+  const log = runtime.log ?? console.log;
+  const logError = runtime.error ?? console.error;
+
+  try {
+    const core = getWechatyRuntime();
+    const senderId = contact.id;
+    const senderName = contact.name();
+    const friendshipId = friendship.id;
+
+    // Resolve routing - use DM routing for friend requests
+    const route = core.channel.routing.resolveAgentRoute({
+      cfg: config,
+      channel: "wechaty",
+      accountId: account.accountId,
+      peer: {
+        kind: "dm",
+        id: senderId,
+      },
+    });
+
+    // Resolve storage path and envelope formatting
+    const storePath = core.channel.session.resolveStorePath(config.session?.store, {
+      agentId: route.agentId,
+    });
+
+    const envelopeOptions = core.channel.reply.resolveEnvelopeFormatOptions(config);
+    const previousTimestamp = core.channel.session.readSessionUpdatedAt({
+      storePath,
+      sessionKey: route.sessionKey,
+    });
+
+    // Build message body for friend request
+    const rawBody = hello
+      ? `[Friend Request] ${hello}`
+      : "[Friend Request]";
+
+    const body = core.channel.reply.formatAgentEnvelope({
+      channel: "Wechaty",
+      from: senderName || senderId,
+      timestamp: Date.now(),
+      previousTimestamp,
+      envelope: envelopeOptions,
+      body: rawBody,
+    });
+
+    // Finalize context payload with friendship-specific fields
+    const ctxPayload = core.channel.reply.finalizeInboundContext({
+      Body: body,
+      RawBody: rawBody,
+      CommandBody: rawBody,
+      From: `wechaty:${senderId}`,
+      To: `wechaty:${senderId}`,
+      SessionKey: route.sessionKey,
+      AccountId: route.accountId,
+      ChatType: "direct",
+      ConversationLabel: senderName || `user:${senderId}`,
+      SenderName: senderName || undefined,
+      SenderId: senderId,
+      CommandAuthorized: false,
+      Provider: "wechaty",
+      Surface: "wechaty",
+      MessageSid: friendshipId,
+      MessageSidFull: friendshipId,
+      OriginatingChannel: "wechaty",
+      OriginatingTo: `wechaty:${senderId}`,
+      Timestamp: Date.now(),
+      // Friendship-specific context fields
+      FriendshipId: friendshipId,
+      FriendshipType: "receive",
+      FriendshipHello: hello || undefined,
+    });
+
+    // Record session
+    await core.channel.session.recordInboundSession({
+      storePath,
+      sessionKey: ctxPayload.SessionKey ?? route.sessionKey,
+      ctx: ctxPayload,
+      updateLastRoute: {
+        sessionKey: route.mainSessionKey,
+        channel: "wechaty",
+        to: `wechaty:${senderId}`,
+        accountId: route.accountId,
+      },
+      onRecordError: (err: Error | unknown) => {
+        logError(`Wechaty: failed updating session meta: ${String(err)}`);
+      },
+    });
+
+    statusSink?.({ lastInboundAt: Date.now() });
+
+    log(
+      `Wechaty friendship inbound: from=${senderName ?? senderId} friendshipId=${friendshipId} hello="${hello}"`,
+    );
+
+    // Dispatch to agent and deliver reply
+    await core.channel.reply.dispatchReplyWithBufferedBlockDispatcher({
+      ctx: ctxPayload,
+      cfg: config,
+      dispatcherOptions: {
+        deliver: async (payload: { text?: string; blocks?: unknown[] }) => {
+          // For friendship requests, we can't reply directly to the friendship
+          // We need to reply to the contact if they become friends or log
+          const text = payload.text?.trim();
+          if (text) {
+            log(`Wechaty: agent response to friend request from ${senderId}: ${text.slice(0, 100)}`);
+            // Note: We can't send messages to non-friends, so agent response is logged only
+            // The agent should use wechaty_contact tool with accept_friend operation
+          }
+        },
+        onError: (err: Error | unknown, info: { kind: string }) => {
+          logError(`[${account.accountId}] Wechaty ${info.kind} friendship reply failed: ${String(err)}`);
+        },
+      },
+    });
+  } catch (error) {
+    logError(`Wechaty: friendship handling failed: ${String(error)}`);
+    if (error instanceof Error && error.stack) {
+      logError(`Stack trace: ${error.stack}`);
+    }
+  }
+}
+
 export async function monitorWechatyProvider(opts: MonitorWechatyOpts): Promise<void> {
   const { config, runtime, abortSignal, statusSink } = opts;
   const log = runtime?.log ?? console.log;
@@ -649,16 +784,36 @@ export async function monitorWechatyProvider(opts: MonitorWechatyOpts): Promise<
 
       onFriendship: async (friendship: Friendship) => {
         try {
+          const friendshipType = friendship.type();
+          // Type 2 is receive (incoming friend request)
+          if (friendshipType !== 2) {
+            return;
+          }
+
+          const contact = friendship.contact();
+          const contactName = contact.name();
+          const contactId = contact.id;
+          const hello = friendship.hello() || "";
+
           // Auto-accept friend requests if enabled
           if (account.config.autoAcceptFriend) {
-            const friendshipType = friendship.type();
-            // Type 2 is receive (incoming friend request)
-            if (friendshipType === 2) {
-              await friendship.accept();
-              const contact = friendship.contact();
-              log(`Auto-accepted friend request from: ${contact.name()} (${contact.id})`);
-            }
+            await friendship.accept();
+            log(`Auto-accepted friend request from: ${contactName} (${contactId})`);
+            return;
           }
+
+          // Route friend request to agent for manual handling
+          log(`Friend request received from: ${contactName} (${contactId}) - routing to agent`);
+
+          await handleFriendshipRequest({
+            friendship,
+            contact,
+            hello,
+            account,
+            config,
+            runtime: { log, error: logError },
+            statusSink,
+          });
         } catch (error) {
           logError(`Error handling friendship: ${String(error)}`);
         }

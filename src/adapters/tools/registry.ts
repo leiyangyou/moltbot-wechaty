@@ -4,6 +4,7 @@ import { createWechatyMessageTool } from "./message.js";
 import { createWechatyContactTool } from "./contact.js";
 import { createWechatyRoomTool } from "./room.js";
 import { createWechatySelfTool } from "./self.js";
+import { createWechatyFriendshipTool } from "./friendship.js";
 
 /**
  * Known puppet types and their capabilities.
@@ -13,7 +14,7 @@ export const PUPPET_CAPABILITIES = {
   // WeChatFerry-based puppets support all WCF-specific tools
   wcf: {
     patterns: ["wcf", "wechatferry", "puppet-wcf"],
-    tools: ["wechaty_message", "wechaty_contact", "wechaty_room", "wechaty_self"],
+    tools: ["wechaty_message", "wechaty_contact", "wechaty_room", "wechaty_self", "wechaty_friendship"],
   },
   // Feishu/Lark puppets - basic tools only
   feishu: {
@@ -45,6 +46,7 @@ export const TOOL_REGISTRY: Record<string, () => ChannelAgentTool> = {
   wechaty_contact: createWechatyContactTool,
   wechaty_room: createWechatyRoomTool,
   wechaty_self: createWechatySelfTool,
+  wechaty_friendship: createWechatyFriendshipTool,
 };
 
 /**

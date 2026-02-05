@@ -294,7 +294,7 @@ export const wechatyPlugin: ChannelPlugin<ResolvedWechatyAccount> = {
 
   outbound: wechatyOutbound,
   actions: wechatyMessageActions,
-  agentTools: ({ account }) =>
+agentTools: ({ account }) =>
     resolveAccountTools({
       puppet: account.puppet,
       toolsConfig: account.config.tools,
